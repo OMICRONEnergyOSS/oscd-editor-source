@@ -78,21 +78,12 @@
             },
             {
               "kind": "field",
-              "name": "_editCount",
+              "name": "dirty",
               "type": {
-                "text": "number"
+                "text": "boolean"
               },
               "privacy": "private",
-              "default": "-1"
-            },
-            {
-              "kind": "field",
-              "name": "_xmlText",
-              "type": {
-                "text": "string"
-              },
-              "privacy": "private",
-              "default": "''"
+              "default": "false"
             },
             {
               "kind": "field",
@@ -100,7 +91,15 @@
               "type": {
                 "text": "string"
               },
-              "readonly": true
+              "default": "''"
+            },
+            {
+              "kind": "field",
+              "name": "_initialXmlText",
+              "type": {
+                "text": "string"
+              },
+              "default": "''"
             },
             {
               "kind": "method",
@@ -119,6 +118,10 @@
                   }
                 }
               ]
+            },
+            {
+              "kind": "method",
+              "name": "applyChanges"
             }
           ],
           "attributes": [

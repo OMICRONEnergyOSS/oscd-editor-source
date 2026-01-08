@@ -2,14 +2,13 @@ import { LitElement, html, css, type PropertyValueMap } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 import { EditV2, Transactor } from '@omicronenergy/oscd-api';
+import 'ace-builds/src-noconflict/ace';
+import 'ace-builds/src-noconflict/theme-solarized_light';
+import 'ace-builds/src-noconflict/mode-xml';
 import AceEditor from 'ace-custom-element';
+
 import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
 import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton.js';
-
-const aceBasePath = new URL(
-  '/__wds-outside-root__/1/node_modules/ace-custom-element/dist/ace/',
-  import.meta.url,
-).href;
 
 function parseXml(xml: string): XMLDocument {
   const parser = new DOMParser();
@@ -146,10 +145,9 @@ export default class OscdEditorText extends ScopedElementsMixin(LitElement) {
         </oscd-filled-button>
       </div>
       <ace-editor
-        mode="ace/mode/xml"
+        mode="xml"
         theme="ace/theme/solarized_light"
         .value=${this.xmlText}
-        base-path=${aceBasePath}
         @change=${(e: CustomEvent<string>) => this.handleAceChange(e)}
       ></ace-editor>
     `;

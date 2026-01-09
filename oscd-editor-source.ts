@@ -3,7 +3,6 @@ import { property, query, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 import { EditV2, Transactor } from '@omicronenergy/oscd-api';
 import 'ace-builds/src-noconflict/ace.js';
-import 'ace-builds/src-noconflict/ext-beautify';
 import 'ace-builds/src-noconflict/theme-sqlserver.js';
 import 'ace-builds/src-noconflict/mode-xml.js';
 import AceEditor from 'ace-custom-element';
@@ -78,15 +77,57 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   }
 
   formatXml() {
-    if (this.aceEditor?.editor?.session) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const ace = (window as any).ace;
-      if (ace && ace.require) {
-        const beautify = ace.require('ace/ext/beautify');
-        beautify.beautify(this.aceEditor.editor.session);
-        this.dirty = true;
-      }
+    const rawXml = this.aceEditor.editor?.getSelectedText() || this.xmlText;
+    if (!rawXml) {
+      return;
     }
+
+    // Trim leading and trailing whitespace to avoid injecting extra < or >
+    const xml = rawXml.trim();
+
+    let initialIndent = '';
+    if (this.aceEditor.editor?.getSelectedText()) {
+      const range = this.aceEditor.editor.getSelectionRange();
+      // Get the starting line of the selection and detect its leading whitespace
+      const startLine = range.start.row;
+      const lineContent = this.aceEditor.editor.session.getLine(startLine);
+      initialIndent = lineContent.match(/^(\s*)/)?.[1] || '';
+    }
+
+    let formatted = '';
+    let indent = '';
+
+    const tab = '\t';
+    const nodes = xml.split(/>\s*</);
+    nodes.forEach(function (node, index) {
+      // Remove leading < from first node and trailing > from last node. Allow for selection leading or trailing whitespace.
+      if (index === 0) {
+        node = node.replace(/^\s*</, '');
+      }
+      if (index === nodes.length - 1) {
+        node = node.replace(/>\s*$/, '');
+      }
+
+      if (node.match(/^\/\w/)) {
+        indent = indent.substring(tab!.length);
+      }
+      formatted += initialIndent + indent + '<' + node + '>\r\n';
+      if (node.match(/^<?\w[^>]*[^/]$/)) {
+        indent += tab;
+      }
+    });
+
+    if (this.aceEditor.editor?.getSelectedText()) {
+      const range = this.aceEditor.editor.getSelectionRange();
+      // Remove the trailing \r\n
+      this.aceEditor.editor.session.replace(
+        range,
+        formatted.substring(0, formatted.length - 2),
+      );
+    } else {
+      this.xmlText = formatted;
+    }
+    this.dirty = true;
   }
 
   applyChanges() {

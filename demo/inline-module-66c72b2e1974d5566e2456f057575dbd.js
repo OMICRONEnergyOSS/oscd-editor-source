@@ -29514,18 +29514,358 @@ exports$1.version = version;
                 });
             })();
 
-ace.define("ace/theme/solarized_light-css",["require","exports","module"], function(require, exports$1, module){module.exports = ".ace-solarized-light .ace_gutter {\n  background: #fbf1d3;\n  color: #333\n}\n\n.ace-solarized-light .ace_print-margin {\n  width: 1px;\n  background: #e8e8e8\n}\n\n.ace-solarized-light {\n  background-color: #FDF6E3;\n  color: #586E75\n}\n\n.ace-solarized-light .ace_cursor {\n  color: #000000\n}\n\n.ace-solarized-light .ace_marker-layer .ace_selection {\n  background: rgba(7, 54, 67, 0.09)\n}\n\n.ace-solarized-light.ace_multiselect .ace_selection.ace_start {\n  box-shadow: 0 0 3px 0px #FDF6E3;\n}\n\n.ace-solarized-light .ace_marker-layer .ace_step {\n  background: rgb(255, 255, 0)\n}\n\n.ace-solarized-light .ace_marker-layer .ace_bracket {\n  margin: -1px 0 0 -1px;\n  border: 1px solid rgba(147, 161, 161, 0.50)\n}\n\n.ace-solarized-light .ace_marker-layer .ace_active-line {\n  background: #EEE8D5\n}\n\n.ace-solarized-light .ace_gutter-active-line {\n  background-color : #EDE5C1\n}\n\n.ace-solarized-light .ace_marker-layer .ace_selected-word {\n  border: 1px solid #7f9390\n}\n\n.ace-solarized-light .ace_invisible {\n  color: rgba(147, 161, 161, 0.50)\n}\n\n.ace-solarized-light .ace_keyword,\n.ace-solarized-light .ace_meta,\n.ace-solarized-light .ace_support.ace_class,\n.ace-solarized-light .ace_support.ace_type {\n  color: #859900\n}\n\n.ace-solarized-light .ace_constant.ace_character,\n.ace-solarized-light .ace_constant.ace_other {\n  color: #CB4B16\n}\n\n.ace-solarized-light .ace_constant.ace_language {\n  color: #B58900\n}\n\n.ace-solarized-light .ace_constant.ace_numeric {\n  color: #D33682\n}\n\n.ace-solarized-light .ace_fold {\n  background-color: #268BD2;\n  border-color: #586E75\n}\n\n.ace-solarized-light .ace_entity.ace_name.ace_function,\n.ace-solarized-light .ace_entity.ace_name.ace_tag,\n.ace-solarized-light .ace_support.ace_function,\n.ace-solarized-light .ace_variable,\n.ace-solarized-light .ace_variable.ace_language {\n  color: #268BD2\n}\n\n.ace-solarized-light .ace_storage {\n  color: #073642\n}\n\n.ace-solarized-light .ace_string {\n  color: #2AA198\n}\n\n.ace-solarized-light .ace_string.ace_regexp {\n  color: #D30102\n}\n\n.ace-solarized-light .ace_comment,\n.ace-solarized-light .ace_entity.ace_other.ace_attribute-name {\n  color: #93A1A1\n}\n\n.ace-solarized-light .ace_indent-guide {\n  background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAEklEQVQImWNgYGBgYHjy8NJ/AAjgA5fzQUmBAAAAAElFTkSuQmCC) right repeat-y\n}\n\n.ace-solarized-light .ace_indent-guide-active {\n  background: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAAZSURBVHjaYvj///9/hivKyv8BAAAA//8DACLqBhbvk+/eAAAAAElFTkSuQmCC\") right repeat-y;\n} \n";
+ace.define("ace/ext/beautify",["require","exports","module","ace/token_iterator"], function(require, exports$1, module){/**
+ * ## Code beautification and formatting extension.
+ *
+ * **This extension is considered outdated.** For better formatting support with modern language servers
+ * and advanced formatting capabilities, consider using [ace-linters](https://github.com/mkslanc/ace-linters)
+ * which provides comprehensive language support including formatting, linting, and IntelliSense features.
+ *
+ * This legacy extension provides basic formatting for HTML, CSS, JavaScript, and PHP code with support for
+ * proper indentation, whitespace management, line breaks, and bracket alignment. It handles various language
+ * constructs including HTML tags, CSS selectors, JavaScript operators, control structures, and maintains
+ * consistent code style throughout the document.
+ *
+ * @module
+ */
+var TokenIterator = require("../token_iterator").TokenIterator;
+function is(token, type) {
+    return token.type.lastIndexOf(type + ".xml") > -1;
+}
+exports$1.singletonTags = ["area", "base", "br", "col", "command", "embed", "hr", "html", "img", "input", "keygen", "link", "meta", "param", "source", "track", "wbr"];
+exports$1.blockTags = ["article", "aside", "blockquote", "body", "div", "dl", "fieldset", "footer", "form", "head", "header", "html", "nav", "ol", "p", "script", "section", "style", "table", "tbody", "tfoot", "thead", "ul"];
+exports$1.formatOptions = {
+    lineBreaksAfterCommasInCurlyBlock: true
+};
+exports$1.beautify = function (session) {
+    var iterator = new TokenIterator(session, 0, 0);
+    var token = iterator.getCurrentToken();
+    var tabString = session.getTabString();
+    var singletonTags = exports$1.singletonTags;
+    var blockTags = exports$1.blockTags;
+    var formatOptions = exports$1.formatOptions || {};
+    var nextToken;
+    var breakBefore = false;
+    var spaceBefore = false;
+    var spaceAfter = false;
+    var code = "";
+    var value = "";
+    var tagName = "";
+    var depth = 0;
+    var lastDepth = 0;
+    var lastIndent = 0;
+    var indent = 0;
+    var unindent = 0;
+    var roundDepth = 0;
+    var curlyDepth = 0;
+    var row;
+    var curRow = 0;
+    var rowsToAdd = 0;
+    var i;
+    var indentNextLine = false;
+    var inTag = false;
+    var inCSS = false;
+    var inBlock = false;
+    var levels = { 0: 0 };
+    var parents = [];
+    var caseBody = false;
+    var trimNext = function () {
+        if (nextToken && nextToken.value && nextToken.type !== 'string.regexp')
+            nextToken.value = nextToken.value.replace(/^\s*/, "");
+    };
+    var trimLine = function () {
+        var end = code.length - 1;
+        while (true) {
+            if (end == 0)
+                break;
+            if (code[end] !== " ")
+                break;
+            end = end - 1;
+        }
+        code = code.slice(0, end + 1);
+    };
+    var trimCode = function () {
+        code = code.trimRight();
+        breakBefore = false;
+    };
+    while (token !== null) {
+        curRow = iterator.getCurrentTokenRow();
+        iterator.$rowTokens;
+        nextToken = iterator.stepForward();
+        if (typeof token !== "undefined") {
+            value = token.value;
+            unindent = 0;
+            inCSS = (tagName === "style" || session.$modeId === "ace/mode/css");
+            if (is(token, "tag-open")) {
+                inTag = true;
+                if (nextToken)
+                    inBlock = (blockTags.indexOf(nextToken.value) !== -1);
+                if (value === "</") {
+                    if (inBlock && !breakBefore && rowsToAdd < 1)
+                        rowsToAdd++;
+                    if (inCSS)
+                        rowsToAdd = 1;
+                    unindent = 1;
+                    inBlock = false;
+                }
+            }
+            else if (is(token, "tag-close")) {
+                inTag = false;
+            }
+            else if (is(token, "comment.start")) {
+                inBlock = true;
+            }
+            else if (is(token, "comment.end")) {
+                inBlock = false;
+            }
+            if (!inTag && !rowsToAdd && token.type === "paren.rparen" && token.value.substr(0, 1) === "}") {
+                rowsToAdd++;
+            }
+            if (curRow !== row) {
+                rowsToAdd = curRow;
+                if (row)
+                    rowsToAdd -= row;
+            }
+            if (rowsToAdd) {
+                trimCode();
+                for (; rowsToAdd > 0; rowsToAdd--)
+                    code += "\n";
+                breakBefore = true;
+                if (!is(token, "comment") && !token.type.match(/^(comment|string)$/))
+                    value = value.trimLeft();
+            }
+            if (value) {
+                if (token.type === "keyword" && value.match(/^(if|else|elseif|for|foreach|while|switch)$/)) {
+                    parents[depth] = value;
+                    trimNext();
+                    spaceAfter = true;
+                    if (value.match(/^(else|elseif)$/)) {
+                        if (code.match(/\}[\s]*$/)) {
+                            trimCode();
+                            spaceBefore = true;
+                        }
+                    }
+                }
+                else if (token.type === "paren.lparen") {
+                    trimNext();
+                    if (value.substr(-1) === "{") {
+                        spaceAfter = true;
+                        indentNextLine = false;
+                        if (!inTag)
+                            rowsToAdd = 1;
+                    }
+                    if (value.substr(0, 1) === "{") {
+                        spaceBefore = true;
+                        if (code.substr(-1) !== '[' && code.trimRight().substr(-1) === '[') {
+                            trimCode();
+                            spaceBefore = false;
+                        }
+                        else if (code.trimRight().substr(-1) === ')') {
+                            trimCode();
+                        }
+                        else {
+                            trimLine();
+                        }
+                    }
+                }
+                else if (token.type === "paren.rparen") {
+                    unindent = 1;
+                    if (value.substr(0, 1) === "}") {
+                        if (parents[depth - 1] === 'case')
+                            unindent++;
+                        if (code.trimRight().substr(-1) === '{') {
+                            trimCode();
+                        }
+                        else {
+                            spaceBefore = true;
+                            if (inCSS)
+                                rowsToAdd += 2;
+                        }
+                    }
+                    if (value.substr(0, 1) === "]") {
+                        if (code.substr(-1) !== '}' && code.trimRight().substr(-1) === '}') {
+                            spaceBefore = false;
+                            indent++;
+                            trimCode();
+                        }
+                    }
+                    if (value.substr(0, 1) === ")") {
+                        if (code.substr(-1) !== '(' && code.trimRight().substr(-1) === '(') {
+                            spaceBefore = false;
+                            indent++;
+                            trimCode();
+                        }
+                    }
+                    trimLine();
+                }
+                else if ((token.type === "keyword.operator" || token.type === "keyword") && value.match(/^(=|==|===|!=|!==|&&|\|\||and|or|xor|\+=|.=|>|>=|<|<=|=>)$/)) {
+                    trimCode();
+                    trimNext();
+                    spaceBefore = true;
+                    spaceAfter = true;
+                }
+                else if (token.type === "punctuation.operator" && value === ';') {
+                    trimCode();
+                    trimNext();
+                    spaceAfter = true;
+                    if (inCSS)
+                        rowsToAdd++;
+                }
+                else if (token.type === "punctuation.operator" && value.match(/^(:|,)$/)) {
+                    trimCode();
+                    trimNext();
+                    if (value.match(/^(,)$/) && curlyDepth > 0 && roundDepth === 0 && formatOptions.lineBreaksAfterCommasInCurlyBlock) {
+                        rowsToAdd++;
+                    }
+                    else {
+                        spaceAfter = true;
+                        breakBefore = false;
+                    }
+                }
+                else if (token.type === "support.php_tag" && value === "?>" && !breakBefore) {
+                    trimCode();
+                    spaceBefore = true;
+                }
+                else if (is(token, "attribute-name") && code.substr(-1).match(/^\s$/)) {
+                    spaceBefore = true;
+                }
+                else if (is(token, "attribute-equals")) {
+                    trimLine();
+                    trimNext();
+                }
+                else if (is(token, "tag-close")) {
+                    trimLine();
+                    if (value === "/>")
+                        spaceBefore = true;
+                }
+                else if (token.type === "keyword" && value.match(/^(case|default)$/)) {
+                    if (caseBody)
+                        unindent = 1;
+                }
+                if (breakBefore && !(token.type.match(/^(comment)$/) && !value.substr(0, 1).match(/^[/#]$/)) && !(token.type.match(/^(string)$/) && !value.substr(0, 1).match(/^['"@]$/))) {
+                    indent = lastIndent;
+                    if (depth > lastDepth) {
+                        indent++;
+                        for (i = depth; i > lastDepth; i--)
+                            levels[i] = indent;
+                    }
+                    else if (depth < lastDepth)
+                        indent = levels[depth];
+                    lastDepth = depth;
+                    lastIndent = indent;
+                    if (unindent)
+                        indent -= unindent;
+                    if (indentNextLine && !roundDepth) {
+                        indent++;
+                        indentNextLine = false;
+                    }
+                    for (i = 0; i < indent; i++)
+                        code += tabString;
+                }
+                if (token.type === "keyword" && value.match(/^(case|default)$/)) {
+                    if (caseBody === false) {
+                        parents[depth] = value;
+                        depth++;
+                        caseBody = true;
+                    }
+                }
+                else if (token.type === "keyword" && value.match(/^(break)$/)) {
+                    if (parents[depth - 1] && parents[depth - 1].match(/^(case|default)$/)) {
+                        depth--;
+                        caseBody = false;
+                    }
+                }
+                if (token.type === "paren.lparen") {
+                    roundDepth += (value.match(/\(/g) || []).length;
+                    curlyDepth += (value.match(/\{/g) || []).length;
+                    depth += value.length;
+                }
+                if (token.type === "keyword" && value.match(/^(if|else|elseif|for|while)$/)) {
+                    indentNextLine = true;
+                    roundDepth = 0;
+                }
+                else if (!roundDepth && value.trim() && token.type !== "comment")
+                    indentNextLine = false;
+                if (token.type === "paren.rparen") {
+                    roundDepth -= (value.match(/\)/g) || []).length;
+                    curlyDepth -= (value.match(/\}/g) || []).length;
+                    for (i = 0; i < value.length; i++) {
+                        depth--;
+                        if (value.substr(i, 1) === '}' && parents[depth] === 'case') {
+                            depth--;
+                        }
+                    }
+                }
+                if (token.type == "text")
+                    value = value.replace(/\s+$/, " ");
+                if (spaceBefore && !breakBefore) {
+                    trimLine();
+                    if (code.substr(-1) !== "\n")
+                        code += " ";
+                }
+                code += value;
+                if (spaceAfter)
+                    code += " ";
+                breakBefore = false;
+                spaceBefore = false;
+                spaceAfter = false;
+                if ((is(token, "tag-close") && (inBlock || blockTags.indexOf(tagName) !== -1)) || (is(token, "doctype") && value === ">")) {
+                    if (inBlock && nextToken && nextToken.value === "</")
+                        rowsToAdd = -1;
+                    else
+                        rowsToAdd = 1;
+                }
+                if (nextToken && singletonTags.indexOf(nextToken.value) === -1) {
+                    if (is(token, "tag-open") && value === "</") {
+                        depth--;
+                    }
+                    else if (is(token, "tag-open") && value === "<") {
+                        depth++;
+                    }
+                    else if (is(token, "tag-close") && value === "/>") {
+                        depth--;
+                    }
+                }
+                if (is(token, "tag-name")) {
+                    tagName = value;
+                }
+                row = curRow;
+            }
+        }
+        token = nextToken;
+    }
+    code = code.trim();
+    session.doc.setValue(code);
+};
+exports$1.commands = [{
+        name: "beautify",
+        description: "Format selection (Beautify)",
+        exec: function (editor) {
+            exports$1.beautify(editor.session);
+        },
+        bindKey: "Ctrl-Shift-B"
+    }];
+
+});                (function() {
+                    ace.require(["ace/ext/beautify"], function(m) {
+                        if (typeof module == "object" && typeof exports == "object" && module) {
+                            module.exports = m;
+                        }
+                    });
+                })();
+
+ace.define("ace/theme/sqlserver-css",["require","exports","module"], function(require, exports$1, module){module.exports = ".ace-sqlserver .ace_gutter {\n    background: #ebebeb;\n    color: #333;\n    overflow: hidden;\n}\n\n.ace-sqlserver .ace_print-margin {\n    width: 1px;\n    background: #e8e8e8;\n}\n\n.ace-sqlserver {\n    background-color: #FFFFFF;\n    color: black;\n}\n\n.ace-sqlserver .ace_identifier {\n    color: black;\n}\n\n.ace-sqlserver .ace_keyword {\n    color: #0000FF;\n}\n\n.ace-sqlserver .ace_numeric {\n    color: black;\n}\n\n.ace-sqlserver .ace_storage {\n    color: #11B7BE;\n}\n\n.ace-sqlserver .ace_keyword.ace_operator,\n.ace-sqlserver .ace_lparen,\n.ace-sqlserver .ace_rparen,\n.ace-sqlserver .ace_punctuation {\n    color: #808080;\n}\n\n.ace-sqlserver .ace_set.ace_statement {\n    color: #0000FF;\n    text-decoration: underline;\n}\n\n.ace-sqlserver .ace_cursor {\n    color: black;\n}\n\n.ace-sqlserver .ace_invisible {\n    color: rgb(191, 191, 191);\n}\n\n.ace-sqlserver .ace_constant.ace_buildin {\n    color: rgb(88, 72, 246);\n}\n\n.ace-sqlserver .ace_constant.ace_language {\n    color: #979797;\n}\n\n.ace-sqlserver .ace_constant.ace_library {\n    color: rgb(6, 150, 14);\n}\n\n.ace-sqlserver .ace_invalid {\n    background-color: rgb(153, 0, 0);\n    color: white;\n}\n\n.ace-sqlserver .ace_support.ace_function {\n    color: #FF00FF;\n}\n\n.ace-sqlserver .ace_support.ace_constant {\n    color: rgb(6, 150, 14);\n}\n\n.ace-sqlserver .ace_class {\n    color: #008080;\n}\n\n.ace-sqlserver .ace_support.ace_other {\n    color: #6D79DE;\n}\n\n.ace-sqlserver .ace_variable.ace_parameter {\n    font-style: italic;\n    color: #FD971F;\n}\n\n.ace-sqlserver .ace_comment {\n    color: #008000;\n}\n\n.ace-sqlserver .ace_constant.ace_numeric {\n    color: black;\n}\n\n.ace-sqlserver .ace_variable {\n    color: rgb(49, 132, 149);\n}\n\n.ace-sqlserver .ace_xml-pe {\n    color: rgb(104, 104, 91);\n}\n\n.ace-sqlserver .ace_support.ace_storedprocedure {\n    color: #800000;\n}\n\n.ace-sqlserver .ace_heading {\n    color: rgb(12, 7, 255);\n}\n\n.ace-sqlserver .ace_list {\n    color: rgb(185, 6, 144);\n}\n\n.ace-sqlserver .ace_marker-layer .ace_selection {\n    background: rgb(181, 213, 255);\n}\n\n.ace-sqlserver .ace_marker-layer .ace_step {\n    background: rgb(252, 255, 0);\n}\n\n.ace-sqlserver .ace_marker-layer .ace_stack {\n    background: rgb(164, 229, 101);\n}\n\n.ace-sqlserver .ace_marker-layer .ace_bracket {\n    margin: -1px 0 0 -1px;\n    border: 1px solid rgb(192, 192, 192);\n}\n\n.ace-sqlserver .ace_marker-layer .ace_active-line {\n    background: rgba(0, 0, 0, 0.07);\n}\n\n.ace-sqlserver .ace_gutter-active-line {\n    background-color: #dcdcdc;\n}\n\n.ace-sqlserver .ace_marker-layer .ace_selected-word {\n    background: rgb(250, 250, 255);\n    border: 1px solid rgb(200, 200, 250);\n}\n\n.ace-sqlserver .ace_meta.ace_tag {\n    color: #0000FF;\n}\n\n.ace-sqlserver .ace_string.ace_regex {\n    color: #FF0000;\n}\n\n.ace-sqlserver .ace_string {\n    color: #FF0000;\n}\n\n.ace-sqlserver .ace_entity.ace_other.ace_attribute-name {\n    color: #994409;\n}\n\n.ace-sqlserver .ace_indent-guide {\n    background: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAE0lEQVQImWP4////f4bLly//BwAmVgd1/w11/gAAAABJRU5ErkJggg==\") right repeat-y;\n}\n\n.ace-sqlserver .ace_indent-guide-active {\n  background: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAAZSURBVHjaYvj///9/hivKyv8BAAAA//8DACLqBhbvk+/eAAAAAElFTkSuQmCC\") right repeat-y;\n} \n";
 
 });
 
-ace.define("ace/theme/solarized_light",["require","exports","module","ace/theme/solarized_light-css","ace/lib/dom"], function(require, exports$1, module){exports$1.isDark = false;
-exports$1.cssClass = "ace-solarized-light";
-exports$1.cssText = require("./solarized_light-css");
+ace.define("ace/theme/sqlserver",["require","exports","module","ace/theme/sqlserver-css","ace/lib/dom"], function(require, exports$1, module){exports$1.isDark = false;
+exports$1.cssClass = "ace-sqlserver";
+exports$1.cssText = require("./sqlserver-css");
 var dom = require("../lib/dom");
 dom.importCssString(exports$1.cssText, exports$1.cssClass, false);
 
 });                (function() {
-                    ace.require(["ace/theme/solarized_light"], function(m) {
+                    ace.require(["ace/theme/sqlserver"], function(m) {
                         if (typeof module == "object" && typeof exports == "object" && module) {
                             module.exports = m;
                         }
@@ -51669,7 +52009,7 @@ function parseXml(xml) {
     }
     return parsed;
 }
-class OscdEditorText extends ScopedElementsMixin(i$3) {
+class OscdEditorSource extends ScopedElementsMixin(i$3) {
     constructor() {
         super(...arguments);
         this.editCount = -1;
@@ -51677,15 +52017,6 @@ class OscdEditorText extends ScopedElementsMixin(i$3) {
         this.xmlText = '';
         this._initialXmlText = '';
     }
-    // connectedCallback() {
-    //   super.connectedCallback();
-    //   this.dirty = false;
-    //   if (this.doc) {
-    //     const serializer = new XMLSerializer();
-    //     this.xmlText = serializer.serializeToString(this.doc);
-    //     this._initialXmlText = this.xmlText;
-    //   }
-    // }
     handleAceChange(e) {
         console.log('Ace Editor Change Event:', e);
         if (typeof e.detail !== 'string') {
@@ -51693,6 +52024,17 @@ class OscdEditorText extends ScopedElementsMixin(i$3) {
         }
         this.xmlText = e.detail;
         this.dirty = this.xmlText !== this._initialXmlText;
+    }
+    formatXml() {
+        if (this.aceEditor?.editor?.session) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const ace = window.ace;
+            if (ace && ace.require) {
+                const beautify = ace.require('ace/ext/beautify');
+                beautify.beautify(this.aceEditor.editor.session);
+                this.dirty = true;
+            }
+        }
     }
     applyChanges() {
         if (!this.xmlText || !this.docName) {
@@ -51734,13 +52076,11 @@ class OscdEditorText extends ScopedElementsMixin(i$3) {
         }
     }
     render() {
-        /* Anything rendered in here for a Menu plugin, will be hidden
-         * Typically you would render dialogs here, where the run method
-         * may set the dialogs state to open.
-         */
         return x `
       <div>
-        <h1>OSCD Raw XML Editor</h1>
+        <oscd-filled-button @click=${() => this.formatXml()}>
+          Format
+        </oscd-filled-button>
         <oscd-filled-button
           ?disabled=${!this.dirty}
           @click=${() => this.applyChanges()}
@@ -51749,15 +52089,15 @@ class OscdEditorText extends ScopedElementsMixin(i$3) {
         </oscd-filled-button>
       </div>
       <ace-editor
-        mode="xml"
-        theme="ace/theme/solarized_light"
+        mode="ace/mode/xml"
+        theme="ace/theme/sqlserver"
         .value=${this.xmlText}
         @change=${(e) => this.handleAceChange(e)}
       ></ace-editor>
     `;
     }
 }
-OscdEditorText.scopedElements = {
+OscdEditorSource.scopedElements = {
     /*
      * add any web-components this component will reference here.
      * E.g.
@@ -51770,7 +52110,7 @@ OscdEditorText.scopedElements = {
     'ace-editor': AceEditor,
     'oscd-filled-button': OscdFilledButton,
 };
-OscdEditorText.styles = i$6 `
+OscdEditorSource.styles = i$6 `
     :host {
       display: grid;
       grid-template-rows: auto 1fr auto;
@@ -51780,8 +52120,10 @@ OscdEditorText.styles = i$6 `
 
     :host > div {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
     :host > div > oscd-filled-button {
@@ -51795,34 +52137,37 @@ OscdEditorText.styles = i$6 `
   `;
 __decorate$1([
     n$3({ type: Object })
-], OscdEditorText.prototype, "editor", void 0);
+], OscdEditorSource.prototype, "editor", void 0);
 __decorate$1([
     n$3({ type: Object })
-], OscdEditorText.prototype, "docs", void 0);
+], OscdEditorSource.prototype, "docs", void 0);
 __decorate$1([
     n$3({ type: Object })
-], OscdEditorText.prototype, "doc", void 0);
+], OscdEditorSource.prototype, "doc", void 0);
 __decorate$1([
     n$3({ type: String })
-], OscdEditorText.prototype, "docName", void 0);
+], OscdEditorSource.prototype, "docName", void 0);
 __decorate$1([
     n$3({ attribute: false })
-], OscdEditorText.prototype, "docVersion", void 0);
+], OscdEditorSource.prototype, "docVersion", void 0);
 __decorate$1([
     n$3({ type: String })
-], OscdEditorText.prototype, "locale", void 0);
+], OscdEditorSource.prototype, "locale", void 0);
 __decorate$1([
     n$3({ type: Number })
-], OscdEditorText.prototype, "editCount", void 0);
+], OscdEditorSource.prototype, "editCount", void 0);
 __decorate$1([
     r$1()
-], OscdEditorText.prototype, "xmlText", void 0);
+], OscdEditorSource.prototype, "xmlText", void 0);
+__decorate$1([
+    e$3('ace-editor')
+], OscdEditorSource.prototype, "aceEditor", void 0);
 
 const { registry } = document.querySelector('oscd-shell');
 registry.define('oscd-menu-open', OscdMenuOpen);
 registry.define('oscd-menu-save', SaveProjectPlugin);
 registry.define('oscd-background-editv1', OscdBackgroundEditV1);
-registry.define('oscd-editor-text', OscdEditorText);
+registry.define('oscd-editor-source', OscdEditorSource);
 
 const plugins = {
   menu: [
@@ -51842,11 +52187,11 @@ const plugins = {
   ],
   editor: [
     {
-      name: 'SCD Text Editor',
-      translations: { de: 'SCD Text Editor' },
-      icon: 'edit',
+      name: 'Source Editor',
+      translations: { de: 'Source Editor' },
+      icon: 'data_object',
       requireDoc: true,
-      tagName: 'oscd-editor-text',
+      tagName: 'oscd-editor-source',
     },
   ],
   background: [

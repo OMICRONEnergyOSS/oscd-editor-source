@@ -1,8 +1,8 @@
-[![Tests](https://github.com/OMICRONEnergyOSS/oscd-editor-text/actions/workflows/test.yml/badge.svg)](https://github.com/OMICRONEnergyOSS/oscd-editor-text/actions/workflows/test.yml) ![NPM Version](https://img.shields.io/npm/v/@omicronenergy/oscd-editor-text)
+[![Tests](https://github.com/OMICRONEnergyOSS/oscd-editor-source/actions/workflows/test.yml/badge.svg)](https://github.com/OMICRONEnergyOSS/oscd-editor-source/actions/workflows/test.yml) ![NPM Version](https://img.shields.io/npm/v/@omicronenergy/oscd-editor-source)
 
 # !!Missing Description!!
 
-## `<oscd-editor-text>`
+## `<oscd-editor-source>`
 
 ## What is this?
 

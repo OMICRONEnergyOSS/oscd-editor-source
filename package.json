@@ -1,14 +1,14 @@
 {
-  "name": "@omicronenergy/oscd-editor-text",
+  "name": "@omicronenergy/oscd-editor-source",
   "version": "0.0.0",
   "description": "OpenSCD Menu Plugin for working with IEC 61850 SCL files.",
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OMICRONEnergyOSS/oscd-editor-text.git"
+    "url": "git+https://github.com/OMICRONEnergyOSS/oscd-editor-source.git"
   },
   "bugs": {
-    "url": "https://github.com/OMICRONEnergyOSS/oscd-editor-text/issues"
+    "url": "https://github.com/OMICRONEnergyOSS/oscd-editor-source/issues"
   },
   "homepage": "https://openscd.org",
   "keywords": [
@@ -20,8 +20,8 @@
   ],
   "license": "Apache-2.0",
   "exports": {
-    ".": "./dist/oscd-editor-text.js",
-    "./oscd-editor-text.js": "./dist/oscd-editor-text.js"
+    ".": "./dist/oscd-editor-source.js",
+    "./oscd-editor-source.js": "./dist/oscd-editor-source.js"
   },
   "files": [
     "/dist/",

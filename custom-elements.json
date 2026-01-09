@@ -4,12 +4,12 @@
   "modules": [
     {
       "kind": "javascript-module",
-      "path": "oscd-editor-text.ts",
+      "path": "oscd-editor-source.ts",
       "declarations": [
         {
           "kind": "class",
           "description": "",
-          "name": "OscdEditorText",
+          "name": "OscdEditorSource",
           "members": [
             {
               "kind": "field",
@@ -102,6 +102,13 @@
               "default": "''"
             },
             {
+              "kind": "field",
+              "name": "aceEditor",
+              "type": {
+                "text": "AceEditor.default"
+              }
+            },
+            {
               "kind": "method",
               "name": "handleAceChange",
               "privacy": "private",
@@ -118,6 +125,10 @@
                   }
                 }
               ]
+            },
+            {
+              "kind": "method",
+              "name": "formatXml"
             },
             {
               "kind": "method",
@@ -187,8 +198,8 @@
           "kind": "js",
           "name": "default",
           "declaration": {
-            "name": "OscdEditorText",
-            "module": "oscd-editor-text.ts"
+            "name": "OscdEditorSource",
+            "module": "oscd-editor-source.ts"
           }
         }
       ]

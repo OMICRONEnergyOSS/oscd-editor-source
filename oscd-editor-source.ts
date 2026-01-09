@@ -1,10 +1,11 @@
 import { LitElement, html, css, type PropertyValueMap } from 'lit';
-import { property, state } from 'lit/decorators.js';
+import { property, query, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 import { EditV2, Transactor } from '@omicronenergy/oscd-api';
-import 'ace-builds/src-noconflict/ace';
-import 'ace-builds/src-noconflict/theme-solarized_light';
-import 'ace-builds/src-noconflict/mode-xml';
+import 'ace-builds/src-noconflict/ace.js';
+import 'ace-builds/src-noconflict/ext-beautify';
+import 'ace-builds/src-noconflict/theme-sqlserver.js';
+import 'ace-builds/src-noconflict/mode-xml.js';
 import AceEditor from 'ace-custom-element';
 
 import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
@@ -21,7 +22,7 @@ function parseXml(xml: string): XMLDocument {
   return parsed;
 }
 
-export default class OscdEditorText extends ScopedElementsMixin(LitElement) {
+export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   static scopedElements = {
     /*
      * add any web-components this component will reference here.
@@ -64,15 +65,8 @@ export default class OscdEditorText extends ScopedElementsMixin(LitElement) {
 
   _initialXmlText: string = '';
 
-  // connectedCallback() {
-  //   super.connectedCallback();
-  //   this.dirty = false;
-  //   if (this.doc) {
-  //     const serializer = new XMLSerializer();
-  //     this.xmlText = serializer.serializeToString(this.doc);
-  //     this._initialXmlText = this.xmlText;
-  //   }
-  // }
+  @query('ace-editor')
+  aceEditor!: AceEditor.default;
 
   private handleAceChange(e: CustomEvent<string>): void {
     console.log('Ace Editor Change Event:', e);
@@ -81,6 +75,18 @@ export default class OscdEditorText extends ScopedElementsMixin(LitElement) {
     }
     this.xmlText = e.detail;
     this.dirty = this.xmlText !== this._initialXmlText;
+  }
+
+  formatXml() {
+    if (this.aceEditor?.editor?.session) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ace = (window as any).ace;
+      if (ace && ace.require) {
+        const beautify = ace.require('ace/ext/beautify');
+        beautify.beautify(this.aceEditor.editor.session);
+        this.dirty = true;
+      }
+    }
   }
 
   applyChanges() {
@@ -117,7 +123,7 @@ export default class OscdEditorText extends ScopedElementsMixin(LitElement) {
     }
   }
 
-  protected updated(changedProps: PropertyValueMap<OscdEditorText>): void {
+  protected updated(changedProps: PropertyValueMap<OscdEditorSource>): void {
     if (changedProps.has('editCount') && this.doc) {
       const serializer = new XMLSerializer();
       const newText = serializer.serializeToString(this.doc);
@@ -130,13 +136,11 @@ export default class OscdEditorText extends ScopedElementsMixin(LitElement) {
   }
 
   render() {
-    /* Anything rendered in here for a Menu plugin, will be hidden
-     * Typically you would render dialogs here, where the run method
-     * may set the dialogs state to open.
-     */
     return html`
       <div>
-        <h1>OSCD Raw XML Editor</h1>
+        <oscd-filled-button @click=${() => this.formatXml()}>
+          Format
+        </oscd-filled-button>
         <oscd-filled-button
           ?disabled=${!this.dirty}
           @click=${() => this.applyChanges()}
@@ -145,8 +149,8 @@ export default class OscdEditorText extends ScopedElementsMixin(LitElement) {
         </oscd-filled-button>
       </div>
       <ace-editor
-        mode="xml"
-        theme="ace/theme/solarized_light"
+        mode="ace/mode/xml"
+        theme="ace/theme/sqlserver"
         .value=${this.xmlText}
         @change=${(e: CustomEvent<string>) => this.handleAceChange(e)}
       ></ace-editor>
@@ -163,8 +167,10 @@ export default class OscdEditorText extends ScopedElementsMixin(LitElement) {
 
     :host > div {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
     :host > div > oscd-filled-button {

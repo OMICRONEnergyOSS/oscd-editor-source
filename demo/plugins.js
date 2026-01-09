@@ -7,8 +7,8 @@ registry.define('oscd-menu-open', OscdMenuOpen);
 registry.define('oscd-menu-save', OscdMenuSave);
 registry.define('oscd-background-editv1', OscdBackgroundEditV1);
 
-import OscdEditorText from '../oscd-editor-text.js';
-registry.define('oscd-editor-text', OscdEditorText);
+import OscdEditorSource from '../oscd-editor-source.js';
+registry.define('oscd-editor-source', OscdEditorSource);
 
 export const plugins = {
   menu: [
@@ -28,11 +28,11 @@ export const plugins = {
   ],
   editor: [
     {
-      name: 'SCD Text Editor',
-      translations: { de: 'SCD Text Editor' },
-      icon: 'edit',
+      name: 'Source Editor',
+      translations: { de: 'Source Editor' },
+      icon: 'data_object',
       requireDoc: true,
-      tagName: 'oscd-editor-text',
+      tagName: 'oscd-editor-source',
     },
   ],
   background: [

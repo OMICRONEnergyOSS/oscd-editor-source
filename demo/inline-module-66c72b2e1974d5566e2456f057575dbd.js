@@ -51807,8 +51807,8 @@ OscdEditorSource.scopedElements = {
 OscdEditorSource.styles = i$6 `
     :host {
       display: grid;
-      grid-template-rows: auto 1fr auto;
-      height: 100vh;
+      grid-template-rows: auto 1fr;
+      height: 100%;
       overflow: hidden;
     }
 

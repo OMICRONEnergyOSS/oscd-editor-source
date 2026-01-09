@@ -1,7 +1,6 @@
 import { LitElement, type PropertyValueMap } from 'lit';
 import { EditV2, Transactor } from '@omicronenergy/oscd-api';
 import 'ace-builds/src-noconflict/ace.js';
-import 'ace-builds/src-noconflict/ext-beautify';
 import 'ace-builds/src-noconflict/theme-sqlserver.js';
 import 'ace-builds/src-noconflict/mode-xml.js';
 import AceEditor from 'ace-custom-element';

@@ -9,6 +9,9 @@ import AceEditor from 'ace-custom-element';
 
 import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
 import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton.js';
+import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
+import { OscdOutlinedIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdOutlinedIconButton.js';
+import { OscdOutlinedButton } from '@omicronenergy/oscd-ui/button/OscdOutlinedButton.js';
 
 function parseXml(xml: string): XMLDocument {
   const parser = new DOMParser();
@@ -34,6 +37,9 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
      */
     'ace-editor': AceEditor,
     'oscd-filled-button': OscdFilledButton,
+    'oscd-outlined-button': OscdOutlinedButton,
+    'oscd-outlined-icon-button': OscdOutlinedIconButton,
+    'oscd-icon': OscdIcon,
   };
 
   @property({ type: Object })
@@ -74,6 +80,21 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
     }
     this.xmlText = e.detail;
     this.dirty = this.xmlText !== this._initialXmlText;
+  }
+
+  collapseAll() {
+    if (!this.aceEditor?.editor) {
+      return;
+    }
+    // Fold all except the root element (line 0)
+    this.aceEditor.editor.session.foldAll(1);
+  }
+
+  expandAll() {
+    if (!this.aceEditor?.editor) {
+      return;
+    }
+    this.aceEditor.editor.session.unfold();
   }
 
   formatXml() {
@@ -173,15 +194,42 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
       }
       this._initialXmlText = this.xmlText;
       this.dirty = false;
+
+      // Clear selection when content updates
+      setTimeout(() => {
+        if (this.aceEditor?.editor) {
+          /* For reasons unknown the ace editor initially selects all code, so we need to clear that*/
+          this.aceEditor.editor.selection.clearSelection();
+          this.aceEditor.editor.moveCursorTo(0, 0);
+        }
+      }, 10);
     }
   }
 
   render() {
     return html`
-      <div>
-        <oscd-filled-button @click=${() => this.formatXml()}>
-          Format
-        </oscd-filled-button>
+      <div class="toolbar">
+        <div class="actions">
+          <oscd-outlined-icon-button
+            @click=${() => this.aceEditor?.editor?.session.foldAll(1)}
+          >
+            <oscd-icon>collapse_all</oscd-icon>
+          </oscd-outlined-icon-button>
+          <oscd-outlined-icon-button
+            @click=${() => this.aceEditor?.editor?.session.unfold()}
+          >
+            <oscd-icon>expand_all</oscd-icon>
+          </oscd-outlined-icon-button>
+          <oscd-outlined-icon-button
+            @click=${() => this.aceEditor.editor?.execCommand('find')}
+          >
+            <oscd-icon>search</oscd-icon>
+          </oscd-outlined-icon-button>
+          <oscd-outlined-button @click=${() => this.formatXml()}>
+            Format
+          </oscd-outlined-button>
+        </div>
+
         <oscd-filled-button
           ?disabled=${!this.dirty}
           @click=${() => this.applyChanges()}
@@ -206,9 +254,9 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
       overflow: hidden;
     }
 
-    :host > div {
+    .toolbar {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
       gap: 8px;
       margin-bottom: 8px;

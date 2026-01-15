@@ -1,7 +1,7 @@
 {
   "name": "@omicronenergy/oscd-editor-source",
   "version": "0.0.0",
-  "description": "OpenSCD Menu Plugin for working with IEC 61850 SCL files.",
+  "description": "OpenSCD Editor Plugin which allows users to view the raw IEC 61850 SCL Markup (and edit it).",
   "type": "module",
   "repository": {
     "type": "git",

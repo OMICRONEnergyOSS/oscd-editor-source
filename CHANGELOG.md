@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.2](https://github.com/OMICRONEnergyOSS/oscd-editor-source/compare/oscd-editor-source-v0.0.1...oscd-editor-source-v0.0.2) (2026-01-16)
+
+
+### Bug Fixes
+
+* load ext-search-box.js ([dfa815e](https://github.com/OMICRONEnergyOSS/oscd-editor-source/commit/dfa815ef38798667b819077ca516f3ea71b08f5f))
+* make worker-xml.js available in bundle ([7c11327](https://github.com/OMICRONEnergyOSS/oscd-editor-source/commit/7c11327b5df33c4c2481131a036504278c7194ff))
+
 ## 0.0.1 (2026-01-15)
 
 

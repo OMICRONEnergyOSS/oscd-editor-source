@@ -76,7 +76,6 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   aceEditor!: AceEditor.default;
 
   private handleAceChange(e: CustomEvent<string>): void {
-    console.log('Ace Editor Change Event:', e);
     if (typeof e.detail !== 'string') {
       return;
     }

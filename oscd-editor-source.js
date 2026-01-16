@@ -46562,7 +46562,6 @@ class OscdEditorSource extends ScopedElementsMixin(i$2) {
         this._initialXmlText = '';
     }
     handleAceChange(e) {
-        console.log('Ace Editor Change Event:', e);
         if (typeof e.detail !== 'string') {
             return;
         }

@@ -3,6 +3,7 @@ import { EditV2, Transactor } from '@omicronenergy/oscd-api';
 import 'ace-builds/src-noconflict/ace.js';
 import 'ace-builds/src-noconflict/theme-sqlserver.js';
 import 'ace-builds/src-noconflict/mode-xml.js';
+import 'ace-builds/src-noconflict/ext-searchbox.js';
 import AceEditor from 'ace-custom-element';
 import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton.js';
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';

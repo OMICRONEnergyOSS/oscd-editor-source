@@ -27,6 +27,17 @@ export default [
     preserveEntrySignatures: 'strict', // leaves export of the plugin entry point
 
     plugins: [
+      copy({
+        targets: [
+          {
+            src: 'node_modules/ace-builds/src-noconflict/worker-xml.js',
+            dest: 'dist/ace',
+            verbose: true,
+            flatten: true,
+          },
+          // Add more patterns if you have more assets
+        ],
+      }),
       /** Resolve bare module imports */
       nodeResolve(),
 
@@ -50,14 +61,25 @@ export default [
 
       /** Bundle assets references via import.meta.url */
       importMetaAssets(),
+
       copy({
         targets: [
           { src: 'demo/sample.scd', dest: 'dist/demo' },
           { src: 'demo/*.js', dest: 'dist/demo' },
-          // Add more patterns if you have more assets
         ],
         verbose: true,
         flatten: false,
+      }),
+
+      copy({
+        targets: [
+          {
+            src: 'node_modules/ace-builds/src-noconflict/worker-xml.js',
+            dest: 'dist/demo/ace',
+          },
+        ],
+        verbose: true,
+        flatten: true,
       }),
     ],
     output: {

@@ -18,7 +18,7 @@
                 "text": "object"
               },
               "static": true,
-              "default": "{ /* * add any web-components this component will reference here. * E.g. * \"oscd-button\": OscdButton, * * Important! * Importing the web-component class should NOT result in the web-component being registered with the global customElements registry. * Otherwise it will fail to render at all. You'll only get an empty tag, no web component. */ 'ace-editor': AceEditor, 'oscd-filled-button': OscdFilledButton, }"
+              "default": "{ /* * add any web-components this component will reference here. * E.g. * \"oscd-button\": OscdButton, * * Important! * Importing the web-component class should NOT result in the web-component being registered with the global customElements registry. * Otherwise it will fail to render at all. You'll only get an empty tag, no web component. */ 'ace-editor': AceEditor, 'oscd-filled-button': OscdFilledButton, 'oscd-outlined-button': OscdOutlinedButton, 'oscd-outlined-icon-button': OscdOutlinedIconButton, 'oscd-icon': OscdIcon, }"
             },
             {
               "kind": "field",
@@ -125,6 +125,14 @@
                   }
                 }
               ]
+            },
+            {
+              "kind": "method",
+              "name": "collapseAll"
+            },
+            {
+              "kind": "method",
+              "name": "expandAll"
             },
             {
               "kind": "method",

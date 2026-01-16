@@ -41,7 +41,7 @@
     "test:watch": "npm run build && concurrently -k -r \"tsc --watch --preserveWatchOutput\" \"wtr --watch --group unit\"",
     "test:visual": "npm run build && playwright install && wtr --group visual",
     "test:update": "npm run build && wtr --group visual --update-visual-baseline",
-    "deploy": "npm run bundle && gh-pages --dist 'dist'",
+    "deploy": "npm run bundle && gh-pages --dist 'dist' --branch deploy",
     "prepare": "husky"
   },
   "dependencies": {

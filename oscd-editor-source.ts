@@ -5,6 +5,8 @@ import { EditV2, Transactor } from '@omicronenergy/oscd-api';
 import 'ace-builds/src-noconflict/ace.js';
 import 'ace-builds/src-noconflict/theme-sqlserver.js';
 import 'ace-builds/src-noconflict/mode-xml.js';
+import 'ace-builds/src-noconflict/ext-searchbox.js';
+
 import AceEditor from 'ace-custom-element';
 
 import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';

@@ -1,4 +1,5 @@
 import { LitElement, html, css, type PropertyValueMap } from 'lit';
+import type * as AceGlobal from 'ace-builds';
 import { property, query, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 import { EditV2, Transactor } from '@omicronenergy/oscd-api';
@@ -6,7 +7,6 @@ import 'ace-builds/src-noconflict/ace.js';
 import 'ace-builds/src-noconflict/theme-sqlserver.js';
 import 'ace-builds/src-noconflict/mode-xml.js';
 import 'ace-builds/src-noconflict/ext-searchbox.js';
-
 import AceEditor from 'ace-custom-element';
 
 import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
@@ -14,6 +14,71 @@ import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdOutlinedIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdOutlinedIconButton.js';
 import { OscdOutlinedButton } from '@omicronenergy/oscd-ui/button/OscdOutlinedButton.js';
+
+declare global {
+  interface Window {
+    ace: typeof AceGlobal;
+  }
+}
+
+const ACE_DEFAULT_OPTIONS = {
+  fontSize: '17',
+  theme: 'ace/theme/sqlserver',
+  mode: 'ace/mode/xml',
+};
+const storageKey = 'oscd:ace-options';
+
+const getStoredAceOptions = (): Omit<
+  Partial<AceGlobal.Ace.EditorOptions>,
+  'theme' | 'mode'
+> &
+  Pick<AceGlobal.Ace.EditorOptions, 'theme' | 'mode'> => {
+  try {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      return {
+        ...ACE_DEFAULT_OPTIONS,
+        ...JSON.parse(stored),
+      };
+    }
+  } catch (error) {
+    console.warn('Failed to retrieve Ace options from storage:', error);
+  }
+  return ACE_DEFAULT_OPTIONS;
+};
+
+let aceOptions = getStoredAceOptions();
+
+function manageAceOptionChange(editor: AceGlobal.Ace.Editor) {
+  editor.setOptions(aceOptions);
+
+  const originalSetOption = editor.setOption.bind(editor);
+  const originalSetOptions = editor.setOptions.bind(editor);
+  const persistOptions = () => {
+    try {
+      aceOptions = {
+        ...ACE_DEFAULT_OPTIONS,
+        ...editor.getOptions(),
+      };
+      localStorage.setItem(storageKey, JSON.stringify(aceOptions));
+    } catch (error) {
+      console.warn('Failed to store Ace options:', error);
+    }
+  };
+
+  editor.setOption = (name: string, value: unknown) => {
+    originalSetOption(
+      name as keyof AceGlobal.Ace.EditorOptions,
+      value as never,
+    );
+    persistOptions();
+  };
+
+  editor.setOptions = (options: Partial<AceGlobal.Ace.EditorOptions>) => {
+    originalSetOptions(options);
+    persistOptions();
+  };
+}
 
 function parseXml(xml: string): XMLDocument {
   const parser = new DOMParser();
@@ -74,6 +139,16 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
 
   @query('ace-editor')
   aceEditor!: AceEditor.default;
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    window.ace?.config?.addEventListener?.('editor', manageAceOptionChange);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.ace?.config?.removeEventListener?.('editor', manageAceOptionChange);
+  }
 
   private handleAceChange(e: CustomEvent<string>): void {
     if (typeof e.detail !== 'string') {
@@ -239,8 +314,8 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
         </oscd-filled-button>
       </div>
       <ace-editor
-        mode="ace/mode/xml"
-        theme="ace/theme/sqlserver"
+        mode=${aceOptions.mode}
+        theme=${aceOptions.theme}
         .value=${this.xmlText}
         @change=${(e: CustomEvent<string>) => this.handleAceChange(e)}
       ></ace-editor>

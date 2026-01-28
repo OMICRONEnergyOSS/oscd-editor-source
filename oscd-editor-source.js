@@ -46543,6 +46543,53 @@ OscdOutlinedButton.scopedElements = {
 };
 OscdOutlinedButton.styles = [styles$4, styles];
 
+const ACE_DEFAULT_OPTIONS = {
+    fontSize: '17',
+    theme: 'ace/theme/sqlserver',
+    mode: 'ace/mode/xml',
+};
+const storageKey = 'oscd:ace-options';
+const getStoredAceOptions = () => {
+    try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+            return {
+                ...ACE_DEFAULT_OPTIONS,
+                ...JSON.parse(stored),
+            };
+        }
+    }
+    catch (error) {
+        console.warn('Failed to retrieve Ace options from storage:', error);
+    }
+    return ACE_DEFAULT_OPTIONS;
+};
+let aceOptions = getStoredAceOptions();
+function manageAceOptionChange(editor) {
+    editor.setOptions(aceOptions);
+    const originalSetOption = editor.setOption.bind(editor);
+    const originalSetOptions = editor.setOptions.bind(editor);
+    const persistOptions = () => {
+        try {
+            aceOptions = {
+                ...ACE_DEFAULT_OPTIONS,
+                ...editor.getOptions(),
+            };
+            localStorage.setItem(storageKey, JSON.stringify(aceOptions));
+        }
+        catch (error) {
+            console.warn('Failed to store Ace options:', error);
+        }
+    };
+    editor.setOption = (name, value) => {
+        originalSetOption(name, value);
+        persistOptions();
+    };
+    editor.setOptions = (options) => {
+        originalSetOptions(options);
+        persistOptions();
+    };
+}
 function parseXml(xml) {
     const parser = new DOMParser();
     const parsed = parser.parseFromString(xml, 'application/xml');
@@ -46560,6 +46607,14 @@ class OscdEditorSource extends ScopedElementsMixin(i$2) {
         this.dirty = false;
         this.xmlText = '';
         this._initialXmlText = '';
+    }
+    connectedCallback() {
+        super.connectedCallback();
+        window.ace?.config?.addEventListener?.('editor', manageAceOptionChange);
+    }
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        window.ace?.config?.removeEventListener?.('editor', manageAceOptionChange);
     }
     handleAceChange(e) {
         if (typeof e.detail !== 'string') {
@@ -46705,8 +46760,8 @@ class OscdEditorSource extends ScopedElementsMixin(i$2) {
         </oscd-filled-button>
       </div>
       <ace-editor
-        mode="ace/mode/xml"
-        theme="ace/theme/sqlserver"
+        mode=${aceOptions.mode}
+        theme=${aceOptions.theme}
         .value=${this.xmlText}
         @change=${(e) => this.handleAceChange(e)}
       ></ace-editor>

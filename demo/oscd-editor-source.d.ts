@@ -1,4 +1,5 @@
 import { LitElement, type PropertyValueMap } from 'lit';
+import type * as AceGlobal from 'ace-builds';
 import { EditV2, Transactor } from '@omicronenergy/oscd-api';
 import 'ace-builds/src-noconflict/ace.js';
 import 'ace-builds/src-noconflict/theme-sqlserver.js';
@@ -9,6 +10,11 @@ import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdOutlinedIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdOutlinedIconButton.js';
 import { OscdOutlinedButton } from '@omicronenergy/oscd-ui/button/OscdOutlinedButton.js';
+declare global {
+    interface Window {
+        ace: typeof AceGlobal;
+    }
+}
 declare const OscdEditorSource_base: typeof LitElement & import("@open-wc/scoped-elements/lit-element.js").ScopedElementsHostConstructor;
 export default class OscdEditorSource extends OscdEditorSource_base {
     static scopedElements: {
@@ -29,6 +35,8 @@ export default class OscdEditorSource extends OscdEditorSource_base {
     xmlText: string;
     _initialXmlText: string;
     aceEditor: AceEditor.default;
+    connectedCallback(): void;
+    disconnectedCallback(): void;
     private handleAceChange;
     collapseAll(): void;
     expandAll(): void;

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.3](https://github.com/OMICRONEnergyOSS/oscd-editor-source/compare/oscd-editor-source-v0.0.2...oscd-editor-source-v0.0.3) (2026-02-03)
+
+
+### Features
+
+* persist user settings ([ae5d60d](https://github.com/OMICRONEnergyOSS/oscd-editor-source/commit/ae5d60d7347cdc46004d45ad68f967cdd0ff18dc))
+
 ## [0.0.2](https://github.com/OMICRONEnergyOSS/oscd-editor-source/compare/oscd-editor-source-v0.0.1...oscd-editor-source-v0.0.2) (2026-01-16)
 
 

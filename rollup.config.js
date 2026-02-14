@@ -30,7 +30,25 @@ export default [
       copy({
         targets: [
           {
-            src: 'node_modules/ace-builds/src-noconflict/worker-xml.js',
+            src: 'node_modules/ace-custom-element/dist/ace/worker-xml.js',
+            dest: 'dist/ace',
+            verbose: true,
+            flatten: true,
+          },
+          {
+            src: 'node_modules/ace-custom-element/dist/ace/ext-settings_menu.js',
+            dest: 'dist/ace',
+            verbose: true,
+            flatten: true,
+          },
+          {
+            src: 'node_modules/ace-custom-element/dist/ace/ext-searchbox.js',
+            dest: 'dist/ace',
+            verbose: true,
+            flatten: true,
+          },
+          {
+            src: 'node_modules/ace-custom-element/dist/ace/theme-*.js',
             dest: 'dist/ace',
             verbose: true,
             flatten: true,
@@ -74,7 +92,19 @@ export default [
       copy({
         targets: [
           {
-            src: 'node_modules/ace-builds/src-noconflict/worker-xml.js',
+            src: 'node_modules/ace-custom-element/dist/ace/worker-xml.js',
+            dest: 'dist/demo/ace',
+          },
+          {
+            src: 'node_modules/ace-custom-element/dist/ace/ext-settings_menu.js',
+            dest: 'dist/demo/ace',
+          },
+          {
+            src: 'node_modules/ace-custom-element/dist/ace/ext-searchbox.js',
+            dest: 'dist/demo/ace',
+          },
+          {
+            src: 'node_modules/ace-custom-element/dist/ace/theme-*.js',
             dest: 'dist/demo/ace',
           },
         ],

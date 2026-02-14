@@ -1,4 +1,4 @@
-import { expect, fixture, html } from '@open-wc/testing';
+import { expect, fixture, html, waitUntil } from '@open-wc/testing';
 import OscdEditorSource from './oscd-editor-source.js';
 
 customElements.define('oscd-editor-source', OscdEditorSource);
@@ -24,11 +24,33 @@ describe('oscd-editor-source', () => {
   });
 
   afterEach(() => {
+    document.getElementById('ace_settingsmenu')?.remove();
     plugin.remove();
   });
 
   it('tests that the plugin works as expected', async () => {
     // Add your assertions here
     expect(plugin.docName).to.equal('test.scd');
+  });
+
+  it('opens the Ace settings menu', async () => {
+    await waitUntil(
+      () => Boolean(plugin.aceEditor?.editor),
+      'Ace editor did not initialize',
+    );
+
+    plugin.openSettings();
+
+    await waitUntil(
+      () => Boolean(document.getElementById('ace_settingsmenu')),
+      'Ace settings menu did not open',
+    );
+
+    const settingsMenu = document.getElementById('ace_settingsmenu');
+    const themeOptions = Array.from(
+      settingsMenu?.querySelectorAll('select#-theme option') ?? [],
+    ).map(option => option.textContent?.trim());
+
+    expect(themeOptions).to.include('OpenSCD');
   });
 });

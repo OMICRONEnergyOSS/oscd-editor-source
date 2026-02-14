@@ -3,17 +3,26 @@ import type * as AceGlobal from 'ace-builds';
 import { property, query, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 import { EditV2, Transactor } from '@omicronenergy/oscd-api';
-import 'ace-builds/src-noconflict/ace.js';
-import 'ace-builds/src-noconflict/theme-sqlserver.js';
-import 'ace-builds/src-noconflict/mode-xml.js';
-import 'ace-builds/src-noconflict/ext-searchbox.js';
 import AceEditor from 'ace-custom-element';
+import 'ace-custom-element/dist/ace/mode-xml.js';
+import 'ace-custom-element/dist/ace/ext-searchbox.js';
+import 'ace-custom-element/dist/ace/ext-themelist.js';
+import './ace-theme-oscd.js';
+import 'ace-custom-element/dist/ace/ext-settings_menu.js';
 
 import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
 import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton.js';
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdOutlinedIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdOutlinedIconButton.js';
 import { OscdOutlinedButton } from '@omicronenergy/oscd-ui/button/OscdOutlinedButton.js';
+
+type AceSettingsMenuModule = {
+  init: () => void;
+};
+
+type AceEditorWithSettingsMenu = AceGlobal.Ace.Editor & {
+  showSettingsMenu?: () => void;
+};
 
 declare global {
   interface Window {
@@ -23,10 +32,13 @@ declare global {
 
 const ACE_DEFAULT_OPTIONS = {
   fontSize: '17',
-  theme: 'ace/theme/sqlserver',
+  theme: 'ace/theme/oscd',
   mode: 'ace/mode/xml',
 };
+const ACE_BASE_PATH = new URL('./ace/', import.meta.url).toString();
 const storageKey = 'oscd:ace-options';
+
+window.ace?.config?.set?.('basePath', ACE_BASE_PATH);
 
 const getStoredAceOptions = (): Omit<
   Partial<AceGlobal.Ace.EditorOptions>,
@@ -48,6 +60,7 @@ const getStoredAceOptions = (): Omit<
 };
 
 let aceOptions = getStoredAceOptions();
+let isSettingsMenuInitialized = false;
 
 function manageAceOptionChange(editor: AceGlobal.Ace.Editor) {
   editor.setOptions(aceOptions);
@@ -143,6 +156,14 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   connectedCallback(): void {
     super.connectedCallback();
     window.ace?.config?.addEventListener?.('editor', manageAceOptionChange);
+
+    if (!isSettingsMenuInitialized) {
+      const settingsMenu = window.ace?.require?.('ace/ext/settings_menu') as
+        | AceSettingsMenuModule
+        | undefined;
+      settingsMenu?.init();
+      isSettingsMenuInitialized = true;
+    }
   }
 
   disconnectedCallback(): void {
@@ -227,6 +248,16 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
     this.dirty = true;
   }
 
+  openSettings() {
+    const editor = this.aceEditor?.editor as
+      | AceEditorWithSettingsMenu
+      | undefined;
+    if (!editor) {
+      return;
+    }
+    editor.showSettingsMenu?.();
+  }
+
   applyChanges() {
     if (!this.xmlText || !this.docName) {
       return;
@@ -304,6 +335,9 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
           <oscd-outlined-button @click=${() => this.formatXml()}>
             Format
           </oscd-outlined-button>
+          <oscd-outlined-icon-button @click=${() => this.openSettings()}>
+            <oscd-icon>settings</oscd-icon>
+          </oscd-outlined-icon-button>
         </div>
 
         <oscd-filled-button
@@ -316,6 +350,9 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
       <ace-editor
         mode=${aceOptions.mode}
         theme=${aceOptions.theme}
+        style="font-size: ${aceOptions.fontSize
+          ? `${aceOptions.fontSize}px`
+          : 'inherit'}"
         .value=${this.xmlText}
         @change=${(e: CustomEvent<string>) => this.handleAceChange(e)}
       ></ace-editor>

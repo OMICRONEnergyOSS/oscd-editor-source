@@ -4,7 +4,7 @@ import { property, query, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 import { EditV2, Transactor } from '@omicronenergy/oscd-api';
 import 'ace-builds/src-noconflict/ace.js';
-import 'ace-builds/src-noconflict/theme-sqlserver.js';
+import './ace-theme-oscd.js';
 import 'ace-builds/src-noconflict/mode-xml.js';
 import 'ace-builds/src-noconflict/ext-searchbox.js';
 import AceEditor from 'ace-custom-element';
@@ -23,7 +23,7 @@ declare global {
 
 const ACE_DEFAULT_OPTIONS = {
   fontSize: '17',
-  theme: 'ace/theme/sqlserver',
+  theme: 'ace/theme/oscd',
   mode: 'ace/mode/xml',
 };
 const storageKey = 'oscd:ace-options';
@@ -316,6 +316,9 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
       <ace-editor
         mode=${aceOptions.mode}
         theme=${aceOptions.theme}
+        style="font-size: ${aceOptions.fontSize
+          ? `${aceOptions.fontSize}px`
+          : 'inherit'}"
         .value=${this.xmlText}
         @change=${(e: CustomEvent<string>) => this.handleAceChange(e)}
       ></ace-editor>

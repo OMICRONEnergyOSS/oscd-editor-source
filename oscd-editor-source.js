@@ -1587,7 +1587,7 @@ var reportErrorIfPathIsNotConfigured = function () {
         reportErrorIfPathIsNotConfigured = function () { };
     }
 };
-exports$1.version = "1.43.5";
+exports$1.version = "1.43.6";
 
 });
 
@@ -16127,6 +16127,18 @@ var Editor = /** @class */ (function () {
             module.prompt(editor, message, options, callback);
         });
     };
+    Object.defineProperty(Editor.prototype, "hoverTooltip", {
+        get: function () {
+            return this.$hoverTooltip || (this.$hoverTooltip = new HoverTooltip(this.container));
+        },
+        set: function (value) {
+            if (this.$hoverTooltip)
+                this.$hoverTooltip.destroy();
+            this.$hoverTooltip = value;
+        },
+        enumerable: false,
+        configurable: true
+    });
     return Editor;
 }());
 Editor.$uid = 0;
@@ -16198,9 +16210,6 @@ config.defineOptions(Editor.prototype, "editor", {
                         shouldShow = true;
                     }
                     if (shouldShow) {
-                        if (!_this.hoverTooltip) {
-                            _this.hoverTooltip = new HoverTooltip();
-                        }
                         var domNode = dom.createElement("div");
                         domNode.textContent = nls("editor.tooltip.disable-editing", "Editing is disabled");
                         if (!_this.hoverTooltip.isOpen) {
@@ -16222,10 +16231,6 @@ config.defineOptions(Editor.prototype, "editor", {
                 event.removeListener(textArea, "keydown", this.$readOnlyCallback);
                 this.commands.off("exec", this.$readOnlyCallback);
                 this.commands.off("commandUnavailable", this.$readOnlyCallback);
-                if (this.hoverTooltip) {
-                    this.hoverTooltip.destroy();
-                    this.hoverTooltip = null;
-                }
             }
         },
         initialValue: false
@@ -44594,16 +44599,50 @@ function newEditEventV2(edit, options) {
 
 /**
  * @license
- * Copyright 2017 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright 2022 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
  */
-const t={ATTRIBUTE:1},e$1=t=>(...e)=>({_$litDirective$:t,values:e});let i$1 = class i{constructor(t){}get _$AU(){return this._$AM._$AU}_$AT(t,e,i){this._$Ct=t,this._$AM=e,this._$Ci=i;}_$AS(t,e){return this.update(t,e)}update(t,e){return this.render(...e)}};
+/**
+ * A component for elevation.
+ */
+class Elevation extends i$2 {
+    connectedCallback() {
+        super.connectedCallback();
+        // Needed for VoiceOver, which will create a "group" if the element is a
+        // sibling to other content.
+        this.setAttribute('aria-hidden', 'true');
+    }
+    render() {
+        return x `<span class="shadow"></span>`;
+    }
+}
 
 /**
  * @license
- * Copyright 2018 Google LLC
- * SPDX-License-Identifier: BSD-3-Clause
- */const e=e$1(class extends i$1{constructor(t$1){if(super(t$1),t$1.type!==t.ATTRIBUTE||"class"!==t$1.name||t$1.strings?.length>2)throw Error("`classMap()` can only be used in the `class` attribute and must be the only part in the attribute.")}render(t){return " "+Object.keys(t).filter((s=>t[s])).join(" ")+" "}update(s,[i]){if(void 0===this.st){this.st=new Set,void 0!==s.strings&&(this.nt=new Set(s.strings.join(" ").split(/\s/).filter((t=>""!==t))));for(const t in i)i[t]&&!this.nt?.has(t)&&this.st.add(t);return this.render(i)}const r=s.element.classList;for(const t of this.st)t in i||(r.remove(t),this.st.delete(t));for(const t in i){const s=!!i[t];s===this.st.has(t)||this.nt?.has(t)||(s?(r.add(t),this.st.add(t)):(r.remove(t),this.st.delete(t)));}return T}});
+ * Copyright 2024 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+// Generated stylesheet for ./elevation/internal/elevation-styles.css.
+const styles$b = i$5 `:host,.shadow,.shadow::before,.shadow::after{border-radius:inherit;inset:0;position:absolute;transition-duration:inherit;transition-property:inherit;transition-timing-function:inherit}:host{display:flex;pointer-events:none;transition-property:box-shadow,opacity}.shadow::before,.shadow::after{content:"";transition-property:box-shadow,opacity;--_level: var(--md-elevation-level, 0);--_shadow-color: var(--md-elevation-shadow-color, var(--md-sys-color-shadow, #000))}.shadow::before{box-shadow:0px calc(1px*(clamp(0,var(--_level),1) + clamp(0,var(--_level) - 3,1) + 2*clamp(0,var(--_level) - 4,1))) calc(1px*(2*clamp(0,var(--_level),1) + clamp(0,var(--_level) - 2,1) + clamp(0,var(--_level) - 4,1))) 0px var(--_shadow-color);opacity:.3}.shadow::after{box-shadow:0px calc(1px*(clamp(0,var(--_level),1) + clamp(0,var(--_level) - 1,1) + 2*clamp(0,var(--_level) - 2,3))) calc(1px*(3*clamp(0,var(--_level),2) + 2*clamp(0,var(--_level) - 2,3))) calc(1px*(clamp(0,var(--_level),4) + 2*clamp(0,var(--_level) - 4,1))) var(--_shadow-color);opacity:.15}
+`;
+
+/*
+ * GENERATED SOURCE FILE. DO NOT MODIFY.
+ * Modifications will be overwritten.
+ * To prevent this file from being overwritten, remove this comment entirely.
+ */
+/**
+ * @tagname oscd-elevation
+ * The `<oscd-elevation>` custom element with default styles.
+ *
+ * Elevation is the relative distance between two surfaces along the z-axis.
+ *
+ * @final
+ * @suppress {visibility}
+ */
+class OscdElevation extends Elevation {
+}
+OscdElevation.styles = [styles$b];
 
 /**
  * @license
@@ -44731,6 +44770,138 @@ class AttachableController {
  * SPDX-License-Identifier: Apache-2.0
  */
 /**
+ * Events that the focus ring listens to.
+ */
+const EVENTS$1 = ['focusin', 'focusout', 'pointerdown'];
+/**
+ * A focus ring component.
+ *
+ * @fires visibility-changed {Event} Fired whenever `visible` changes.
+ */
+class FocusRing extends i$2 {
+    constructor() {
+        super(...arguments);
+        /**
+         * Makes the focus ring visible.
+         */
+        this.visible = false;
+        /**
+         * Makes the focus ring animate inwards instead of outwards.
+         */
+        this.inward = false;
+        this.attachableController = new AttachableController(this, this.onControlChange.bind(this));
+    }
+    get htmlFor() {
+        return this.attachableController.htmlFor;
+    }
+    set htmlFor(htmlFor) {
+        this.attachableController.htmlFor = htmlFor;
+    }
+    get control() {
+        return this.attachableController.control;
+    }
+    set control(control) {
+        this.attachableController.control = control;
+    }
+    attach(control) {
+        this.attachableController.attach(control);
+    }
+    detach() {
+        this.attachableController.detach();
+    }
+    connectedCallback() {
+        super.connectedCallback();
+        // Needed for VoiceOver, which will create a "group" if the element is a
+        // sibling to other content.
+        this.setAttribute('aria-hidden', 'true');
+    }
+    /** @private */
+    handleEvent(event) {
+        if (event[HANDLED_BY_FOCUS_RING]) {
+            // This ensures the focus ring does not activate when multiple focus rings
+            // are used within a single component.
+            return;
+        }
+        switch (event.type) {
+            default:
+                return;
+            case 'focusin':
+                this.visible = this.control?.matches(':focus-visible') ?? false;
+                break;
+            case 'focusout':
+            case 'pointerdown':
+                this.visible = false;
+                break;
+        }
+        event[HANDLED_BY_FOCUS_RING] = true;
+    }
+    onControlChange(prev, next) {
+        for (const event of EVENTS$1) {
+            prev?.removeEventListener(event, this);
+            next?.addEventListener(event, this);
+        }
+    }
+    update(changed) {
+        if (changed.has('visible')) {
+            // This logic can be removed once the `:has` selector has been introduced
+            // to Firefox. This is necessary to allow correct submenu styles.
+            this.dispatchEvent(new Event('visibility-changed'));
+        }
+        super.update(changed);
+    }
+}
+__decorate$1([
+    n$1({ type: Boolean, reflect: true })
+], FocusRing.prototype, "visible", void 0);
+__decorate$1([
+    n$1({ type: Boolean, reflect: true })
+], FocusRing.prototype, "inward", void 0);
+const HANDLED_BY_FOCUS_RING = Symbol('handledByFocusRing');
+
+/**
+ * @license
+ * Copyright 2024 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+// Generated stylesheet for ./focus/internal/focus-ring-styles.css.
+const styles$a = i$5 `:host{animation-delay:0s,calc(var(--md-focus-ring-duration, 600ms)*.25);animation-duration:calc(var(--md-focus-ring-duration, 600ms)*.25),calc(var(--md-focus-ring-duration, 600ms)*.75);animation-timing-function:cubic-bezier(0.2, 0, 0, 1);box-sizing:border-box;color:var(--md-focus-ring-color, var(--md-sys-color-secondary, #625b71));display:none;pointer-events:none;position:absolute}:host([visible]){display:flex}:host(:not([inward])){animation-name:outward-grow,outward-shrink;border-end-end-radius:calc(var(--md-focus-ring-shape-end-end, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) + var(--md-focus-ring-outward-offset, 2px));border-end-start-radius:calc(var(--md-focus-ring-shape-end-start, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) + var(--md-focus-ring-outward-offset, 2px));border-start-end-radius:calc(var(--md-focus-ring-shape-start-end, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) + var(--md-focus-ring-outward-offset, 2px));border-start-start-radius:calc(var(--md-focus-ring-shape-start-start, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) + var(--md-focus-ring-outward-offset, 2px));inset:calc(-1*var(--md-focus-ring-outward-offset, 2px));outline:var(--md-focus-ring-width, 3px) solid currentColor}:host([inward]){animation-name:inward-grow,inward-shrink;border-end-end-radius:calc(var(--md-focus-ring-shape-end-end, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) - var(--md-focus-ring-inward-offset, 0px));border-end-start-radius:calc(var(--md-focus-ring-shape-end-start, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) - var(--md-focus-ring-inward-offset, 0px));border-start-end-radius:calc(var(--md-focus-ring-shape-start-end, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) - var(--md-focus-ring-inward-offset, 0px));border-start-start-radius:calc(var(--md-focus-ring-shape-start-start, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) - var(--md-focus-ring-inward-offset, 0px));border:var(--md-focus-ring-width, 3px) solid currentColor;inset:var(--md-focus-ring-inward-offset, 0px)}@keyframes outward-grow{from{outline-width:0}to{outline-width:var(--md-focus-ring-active-width, 8px)}}@keyframes outward-shrink{from{outline-width:var(--md-focus-ring-active-width, 8px)}}@keyframes inward-grow{from{border-width:0}to{border-width:var(--md-focus-ring-active-width, 8px)}}@keyframes inward-shrink{from{border-width:var(--md-focus-ring-active-width, 8px)}}@media(prefers-reduced-motion){:host{animation:none}}
+`;
+
+/*
+ * GENERATED SOURCE FILE. DO NOT MODIFY.
+ * Modifications will be overwritten.
+ * To prevent this file from being overwritten, remove this comment entirely.
+ */
+/**
+ * @tagname oscd-focus-ring
+ * TODO(b/267336424): add docs
+ *
+ * @final
+ * @suppress {visibility}
+ */
+class OscdFocusRing extends FocusRing {
+}
+OscdFocusRing.styles = [styles$a];
+
+/**
+ * @license
+ * Copyright 2017 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+const t={ATTRIBUTE:1},e$1=t=>(...e)=>({_$litDirective$:t,values:e});let i$1 = class i{constructor(t){}get _$AU(){return this._$AM._$AU}_$AT(t,e,i){this._$Ct=t,this._$AM=e,this._$Ci=i;}_$AS(t,e){return this.update(t,e)}update(t,e){return this.render(...e)}};
+
+/**
+ * @license
+ * Copyright 2018 Google LLC
+ * SPDX-License-Identifier: BSD-3-Clause
+ */const e=e$1(class extends i$1{constructor(t$1){if(super(t$1),t$1.type!==t.ATTRIBUTE||"class"!==t$1.name||t$1.strings?.length>2)throw Error("`classMap()` can only be used in the `class` attribute and must be the only part in the attribute.")}render(t){return " "+Object.keys(t).filter((s=>t[s])).join(" ")+" "}update(s,[i]){if(void 0===this.st){this.st=new Set,void 0!==s.strings&&(this.nt=new Set(s.strings.join(" ").split(/\s/).filter((t=>""!==t))));for(const t in i)i[t]&&!this.nt?.has(t)&&this.st.add(t);return this.render(i)}const r=s.element.classList;for(const t of this.st)t in i||(r.remove(t),this.st.delete(t));for(const t in i){const s=!!i[t];s===this.st.has(t)||this.nt?.has(t)||(s?(r.add(t),this.st.add(t)):(r.remove(t),this.st.delete(t)));}return T}});
+
+/**
+ * @license
+ * Copyright 2021 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
  * Easing functions to use for web animations.
  *
  * **NOTE:** `EASING.EMPHASIZED` is approximated with unknown accuracy.
@@ -44738,7 +44909,9 @@ class AttachableController {
  * TODO(b/241113345): replace with tokens
  */
 const EASING = {
-    STANDARD: 'cubic-bezier(0.2, 0, 0, 1)'};
+    STANDARD: 'cubic-bezier(0.2, 0, 0, 1)',
+    EMPHASIZED: 'cubic-bezier(.3,0,0,1)',
+    EMPHASIZED_ACCELERATE: 'cubic-bezier(.3,0,.8,.15)'};
 
 /**
  * @license
@@ -44801,7 +44974,7 @@ var State;
 /**
  * Events that the ripple listens to.
  */
-const EVENTS$1 = [
+const EVENTS = [
     'click',
     'contextmenu',
     'pointercancel',
@@ -45126,7 +45299,7 @@ class Ripple extends i$2 {
         }
     }
     onControlChange(prev, next) {
-        for (const event of EVENTS$1) {
+        for (const event of EVENTS) {
             prev?.removeEventListener(event, this);
             next?.addEventListener(event, this);
         }
@@ -45154,16 +45327,16 @@ __decorate$1([
 const styles$9 = i$5 `:host{display:flex;margin:auto;pointer-events:none}:host([disabled]){display:none}@media(forced-colors: active){:host{display:none}}:host,.surface{border-radius:inherit;position:absolute;inset:0;overflow:hidden}.surface{-webkit-tap-highlight-color:rgba(0,0,0,0)}.surface::before,.surface::after{content:"";opacity:0;position:absolute}.surface::before{background-color:var(--md-ripple-hover-color, var(--md-sys-color-on-surface, #1d1b20));inset:0;transition:opacity 15ms linear,background-color 15ms linear}.surface::after{background:radial-gradient(closest-side, var(--md-ripple-pressed-color, var(--md-sys-color-on-surface, #1d1b20)) max(100% - 70px, 65%), transparent 100%);transform-origin:center center;transition:opacity 375ms linear}.hovered::before{background-color:var(--md-ripple-hover-color, var(--md-sys-color-on-surface, #1d1b20));opacity:var(--md-ripple-hover-opacity, 0.08)}.pressed::after{opacity:var(--md-ripple-pressed-opacity, 0.12);transition-duration:105ms}
 `;
 
-/**
- * @license
- * Copyright 2022 Google LLC
- * SPDX-License-Identifier: Apache-2.0
+/*
+ * GENERATED SOURCE FILE. DO NOT MODIFY.
+ * Modifications will be overwritten.
+ * To prevent this file from being overwritten, remove this comment entirely.
  */
 /**
+ * @tagname oscd-ripple
  * @summary Ripples, also known as state layers, are visual indicators used to
  * communicate the status of a component or interactive element.
  *
- * @description A state layer is a semi-transparent covering on an element that
  * indicates its state. State layers provide a systematic approach to
  * visualizing states by using opacity. A layer can be applied to an entire
  * element or in a circular shape and only one state layer can be applied at a
@@ -45172,173 +45345,9 @@ const styles$9 = i$5 `:host{display:flex;margin:auto;pointer-events:none}:host([
  * @final
  * @suppress {visibility}
  */
-class MdRipple extends Ripple {
+class OscdRipple extends Ripple {
 }
-MdRipple.styles = [styles$9];
-
-/**
- * @license
- * Copyright 2021 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-/**
- * Events that the focus ring listens to.
- */
-const EVENTS = ['focusin', 'focusout', 'pointerdown'];
-/**
- * A focus ring component.
- *
- * @fires visibility-changed {Event} Fired whenever `visible` changes.
- */
-class FocusRing extends i$2 {
-    constructor() {
-        super(...arguments);
-        /**
-         * Makes the focus ring visible.
-         */
-        this.visible = false;
-        /**
-         * Makes the focus ring animate inwards instead of outwards.
-         */
-        this.inward = false;
-        this.attachableController = new AttachableController(this, this.onControlChange.bind(this));
-    }
-    get htmlFor() {
-        return this.attachableController.htmlFor;
-    }
-    set htmlFor(htmlFor) {
-        this.attachableController.htmlFor = htmlFor;
-    }
-    get control() {
-        return this.attachableController.control;
-    }
-    set control(control) {
-        this.attachableController.control = control;
-    }
-    attach(control) {
-        this.attachableController.attach(control);
-    }
-    detach() {
-        this.attachableController.detach();
-    }
-    connectedCallback() {
-        super.connectedCallback();
-        // Needed for VoiceOver, which will create a "group" if the element is a
-        // sibling to other content.
-        this.setAttribute('aria-hidden', 'true');
-    }
-    /** @private */
-    handleEvent(event) {
-        if (event[HANDLED_BY_FOCUS_RING]) {
-            // This ensures the focus ring does not activate when multiple focus rings
-            // are used within a single component.
-            return;
-        }
-        switch (event.type) {
-            default:
-                return;
-            case 'focusin':
-                this.visible = this.control?.matches(':focus-visible') ?? false;
-                break;
-            case 'focusout':
-            case 'pointerdown':
-                this.visible = false;
-                break;
-        }
-        event[HANDLED_BY_FOCUS_RING] = true;
-    }
-    onControlChange(prev, next) {
-        for (const event of EVENTS) {
-            prev?.removeEventListener(event, this);
-            next?.addEventListener(event, this);
-        }
-    }
-    update(changed) {
-        if (changed.has('visible')) {
-            // This logic can be removed once the `:has` selector has been introduced
-            // to Firefox. This is necessary to allow correct submenu styles.
-            this.dispatchEvent(new Event('visibility-changed'));
-        }
-        super.update(changed);
-    }
-}
-__decorate$1([
-    n$1({ type: Boolean, reflect: true })
-], FocusRing.prototype, "visible", void 0);
-__decorate$1([
-    n$1({ type: Boolean, reflect: true })
-], FocusRing.prototype, "inward", void 0);
-const HANDLED_BY_FOCUS_RING = Symbol('handledByFocusRing');
-
-/**
- * @license
- * Copyright 2024 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-// Generated stylesheet for ./focus/internal/focus-ring-styles.css.
-const styles$8 = i$5 `:host{animation-delay:0s,calc(var(--md-focus-ring-duration, 600ms)*.25);animation-duration:calc(var(--md-focus-ring-duration, 600ms)*.25),calc(var(--md-focus-ring-duration, 600ms)*.75);animation-timing-function:cubic-bezier(0.2, 0, 0, 1);box-sizing:border-box;color:var(--md-focus-ring-color, var(--md-sys-color-secondary, #625b71));display:none;pointer-events:none;position:absolute}:host([visible]){display:flex}:host(:not([inward])){animation-name:outward-grow,outward-shrink;border-end-end-radius:calc(var(--md-focus-ring-shape-end-end, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) + var(--md-focus-ring-outward-offset, 2px));border-end-start-radius:calc(var(--md-focus-ring-shape-end-start, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) + var(--md-focus-ring-outward-offset, 2px));border-start-end-radius:calc(var(--md-focus-ring-shape-start-end, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) + var(--md-focus-ring-outward-offset, 2px));border-start-start-radius:calc(var(--md-focus-ring-shape-start-start, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) + var(--md-focus-ring-outward-offset, 2px));inset:calc(-1*var(--md-focus-ring-outward-offset, 2px));outline:var(--md-focus-ring-width, 3px) solid currentColor}:host([inward]){animation-name:inward-grow,inward-shrink;border-end-end-radius:calc(var(--md-focus-ring-shape-end-end, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) - var(--md-focus-ring-inward-offset, 0px));border-end-start-radius:calc(var(--md-focus-ring-shape-end-start, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) - var(--md-focus-ring-inward-offset, 0px));border-start-end-radius:calc(var(--md-focus-ring-shape-start-end, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) - var(--md-focus-ring-inward-offset, 0px));border-start-start-radius:calc(var(--md-focus-ring-shape-start-start, var(--md-focus-ring-shape, var(--md-sys-shape-corner-full, 9999px))) - var(--md-focus-ring-inward-offset, 0px));border:var(--md-focus-ring-width, 3px) solid currentColor;inset:var(--md-focus-ring-inward-offset, 0px)}@keyframes outward-grow{from{outline-width:0}to{outline-width:var(--md-focus-ring-active-width, 8px)}}@keyframes outward-shrink{from{outline-width:var(--md-focus-ring-active-width, 8px)}}@keyframes inward-grow{from{border-width:0}to{border-width:var(--md-focus-ring-active-width, 8px)}}@keyframes inward-shrink{from{border-width:var(--md-focus-ring-active-width, 8px)}}@media(prefers-reduced-motion){:host{animation:none}}
-`;
-
-/**
- * @license
- * Copyright 2021 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-/**
- * TODO(b/267336424): add docs
- *
- * @final
- * @suppress {visibility}
- */
-class MdFocusRing extends FocusRing {
-}
-MdFocusRing.styles = [styles$8];
-
-/**
- * @license
- * Copyright 2022 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-/**
- * A component for elevation.
- */
-class Elevation extends i$2 {
-    connectedCallback() {
-        super.connectedCallback();
-        // Needed for VoiceOver, which will create a "group" if the element is a
-        // sibling to other content.
-        this.setAttribute('aria-hidden', 'true');
-    }
-    render() {
-        return x `<span class="shadow"></span>`;
-    }
-}
-
-/**
- * @license
- * Copyright 2024 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-// Generated stylesheet for ./elevation/internal/elevation-styles.css.
-const styles$7 = i$5 `:host,.shadow,.shadow::before,.shadow::after{border-radius:inherit;inset:0;position:absolute;transition-duration:inherit;transition-property:inherit;transition-timing-function:inherit}:host{display:flex;pointer-events:none;transition-property:box-shadow,opacity}.shadow::before,.shadow::after{content:"";transition-property:box-shadow,opacity;--_level: var(--md-elevation-level, 0);--_shadow-color: var(--md-elevation-shadow-color, var(--md-sys-color-shadow, #000))}.shadow::before{box-shadow:0px calc(1px*(clamp(0,var(--_level),1) + clamp(0,var(--_level) - 3,1) + 2*clamp(0,var(--_level) - 4,1))) calc(1px*(2*clamp(0,var(--_level),1) + clamp(0,var(--_level) - 2,1) + clamp(0,var(--_level) - 4,1))) 0px var(--_shadow-color);opacity:.3}.shadow::after{box-shadow:0px calc(1px*(clamp(0,var(--_level),1) + clamp(0,var(--_level) - 1,1) + 2*clamp(0,var(--_level) - 2,3))) calc(1px*(3*clamp(0,var(--_level),2) + 2*clamp(0,var(--_level) - 2,3))) calc(1px*(clamp(0,var(--_level),4) + 2*clamp(0,var(--_level) - 4,1))) var(--_shadow-color);opacity:.15}
-`;
-
-/**
- * @license
- * Copyright 2022 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-/**
- * The `<md-elevation>` custom element with default styles.
- *
- * Elevation is the relative distance between two surfaces along the z-axis.
- *
- * @final
- * @suppress {visibility}
- */
-class MdElevation extends Elevation {
-}
-MdElevation.styles = [styles$7];
+OscdRipple.styles = [styles$9];
 
 /**
  * @license
@@ -46020,7 +46029,7 @@ class FilledButton extends Button {
  * SPDX-License-Identifier: Apache-2.0
  */
 // Generated stylesheet for ./button/internal/filled-styles.css.
-const styles$6 = i$5 `:host{--_container-color: var(--md-filled-button-container-color, var(--md-sys-color-primary, #6750a4));--_container-elevation: var(--md-filled-button-container-elevation, 0);--_container-height: var(--md-filled-button-container-height, 40px);--_container-shadow-color: var(--md-filled-button-container-shadow-color, var(--md-sys-color-shadow, #000));--_disabled-container-color: var(--md-filled-button-disabled-container-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-container-elevation: var(--md-filled-button-disabled-container-elevation, 0);--_disabled-container-opacity: var(--md-filled-button-disabled-container-opacity, 0.12);--_disabled-label-text-color: var(--md-filled-button-disabled-label-text-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-label-text-opacity: var(--md-filled-button-disabled-label-text-opacity, 0.38);--_focus-container-elevation: var(--md-filled-button-focus-container-elevation, 0);--_focus-label-text-color: var(--md-filled-button-focus-label-text-color, var(--md-sys-color-on-primary, #fff));--_hover-container-elevation: var(--md-filled-button-hover-container-elevation, 1);--_hover-label-text-color: var(--md-filled-button-hover-label-text-color, var(--md-sys-color-on-primary, #fff));--_hover-state-layer-color: var(--md-filled-button-hover-state-layer-color, var(--md-sys-color-on-primary, #fff));--_hover-state-layer-opacity: var(--md-filled-button-hover-state-layer-opacity, 0.08);--_label-text-color: var(--md-filled-button-label-text-color, var(--md-sys-color-on-primary, #fff));--_label-text-font: var(--md-filled-button-label-text-font, var(--md-sys-typescale-label-large-font, var(--md-ref-typeface-plain, Roboto)));--_label-text-line-height: var(--md-filled-button-label-text-line-height, var(--md-sys-typescale-label-large-line-height, 1.25rem));--_label-text-size: var(--md-filled-button-label-text-size, var(--md-sys-typescale-label-large-size, 0.875rem));--_label-text-weight: var(--md-filled-button-label-text-weight, var(--md-sys-typescale-label-large-weight, var(--md-ref-typeface-weight-medium, 500)));--_pressed-container-elevation: var(--md-filled-button-pressed-container-elevation, 0);--_pressed-label-text-color: var(--md-filled-button-pressed-label-text-color, var(--md-sys-color-on-primary, #fff));--_pressed-state-layer-color: var(--md-filled-button-pressed-state-layer-color, var(--md-sys-color-on-primary, #fff));--_pressed-state-layer-opacity: var(--md-filled-button-pressed-state-layer-opacity, 0.12);--_disabled-icon-color: var(--md-filled-button-disabled-icon-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-icon-opacity: var(--md-filled-button-disabled-icon-opacity, 0.38);--_focus-icon-color: var(--md-filled-button-focus-icon-color, var(--md-sys-color-on-primary, #fff));--_hover-icon-color: var(--md-filled-button-hover-icon-color, var(--md-sys-color-on-primary, #fff));--_icon-color: var(--md-filled-button-icon-color, var(--md-sys-color-on-primary, #fff));--_icon-size: var(--md-filled-button-icon-size, 18px);--_pressed-icon-color: var(--md-filled-button-pressed-icon-color, var(--md-sys-color-on-primary, #fff));--_container-shape-start-start: var(--md-filled-button-container-shape-start-start, var(--md-filled-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-start-end: var(--md-filled-button-container-shape-start-end, var(--md-filled-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-end: var(--md-filled-button-container-shape-end-end, var(--md-filled-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-start: var(--md-filled-button-container-shape-end-start, var(--md-filled-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_leading-space: var(--md-filled-button-leading-space, 24px);--_trailing-space: var(--md-filled-button-trailing-space, 24px);--_with-leading-icon-leading-space: var(--md-filled-button-with-leading-icon-leading-space, 16px);--_with-leading-icon-trailing-space: var(--md-filled-button-with-leading-icon-trailing-space, 24px);--_with-trailing-icon-leading-space: var(--md-filled-button-with-trailing-icon-leading-space, 24px);--_with-trailing-icon-trailing-space: var(--md-filled-button-with-trailing-icon-trailing-space, 16px)}
+const styles$8 = i$5 `:host{--_container-color: var(--md-filled-button-container-color, var(--md-sys-color-primary, #6750a4));--_container-elevation: var(--md-filled-button-container-elevation, 0);--_container-height: var(--md-filled-button-container-height, 40px);--_container-shadow-color: var(--md-filled-button-container-shadow-color, var(--md-sys-color-shadow, #000));--_disabled-container-color: var(--md-filled-button-disabled-container-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-container-elevation: var(--md-filled-button-disabled-container-elevation, 0);--_disabled-container-opacity: var(--md-filled-button-disabled-container-opacity, 0.12);--_disabled-label-text-color: var(--md-filled-button-disabled-label-text-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-label-text-opacity: var(--md-filled-button-disabled-label-text-opacity, 0.38);--_focus-container-elevation: var(--md-filled-button-focus-container-elevation, 0);--_focus-label-text-color: var(--md-filled-button-focus-label-text-color, var(--md-sys-color-on-primary, #fff));--_hover-container-elevation: var(--md-filled-button-hover-container-elevation, 1);--_hover-label-text-color: var(--md-filled-button-hover-label-text-color, var(--md-sys-color-on-primary, #fff));--_hover-state-layer-color: var(--md-filled-button-hover-state-layer-color, var(--md-sys-color-on-primary, #fff));--_hover-state-layer-opacity: var(--md-filled-button-hover-state-layer-opacity, 0.08);--_label-text-color: var(--md-filled-button-label-text-color, var(--md-sys-color-on-primary, #fff));--_label-text-font: var(--md-filled-button-label-text-font, var(--md-sys-typescale-label-large-font, var(--md-ref-typeface-plain, Roboto)));--_label-text-line-height: var(--md-filled-button-label-text-line-height, var(--md-sys-typescale-label-large-line-height, 1.25rem));--_label-text-size: var(--md-filled-button-label-text-size, var(--md-sys-typescale-label-large-size, 0.875rem));--_label-text-weight: var(--md-filled-button-label-text-weight, var(--md-sys-typescale-label-large-weight, var(--md-ref-typeface-weight-medium, 500)));--_pressed-container-elevation: var(--md-filled-button-pressed-container-elevation, 0);--_pressed-label-text-color: var(--md-filled-button-pressed-label-text-color, var(--md-sys-color-on-primary, #fff));--_pressed-state-layer-color: var(--md-filled-button-pressed-state-layer-color, var(--md-sys-color-on-primary, #fff));--_pressed-state-layer-opacity: var(--md-filled-button-pressed-state-layer-opacity, 0.12);--_disabled-icon-color: var(--md-filled-button-disabled-icon-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-icon-opacity: var(--md-filled-button-disabled-icon-opacity, 0.38);--_focus-icon-color: var(--md-filled-button-focus-icon-color, var(--md-sys-color-on-primary, #fff));--_hover-icon-color: var(--md-filled-button-hover-icon-color, var(--md-sys-color-on-primary, #fff));--_icon-color: var(--md-filled-button-icon-color, var(--md-sys-color-on-primary, #fff));--_icon-size: var(--md-filled-button-icon-size, 18px);--_pressed-icon-color: var(--md-filled-button-pressed-icon-color, var(--md-sys-color-on-primary, #fff));--_container-shape-start-start: var(--md-filled-button-container-shape-start-start, var(--md-filled-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-start-end: var(--md-filled-button-container-shape-start-end, var(--md-filled-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-end: var(--md-filled-button-container-shape-end-end, var(--md-filled-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-start: var(--md-filled-button-container-shape-end-start, var(--md-filled-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_leading-space: var(--md-filled-button-leading-space, 24px);--_trailing-space: var(--md-filled-button-trailing-space, 24px);--_with-leading-icon-leading-space: var(--md-filled-button-with-leading-icon-leading-space, 16px);--_with-leading-icon-trailing-space: var(--md-filled-button-with-leading-icon-trailing-space, 24px);--_with-trailing-icon-leading-space: var(--md-filled-button-with-trailing-icon-leading-space, 24px);--_with-trailing-icon-trailing-space: var(--md-filled-button-with-trailing-icon-trailing-space, 16px)}
 `;
 
 /**
@@ -46029,7 +46038,7 @@ const styles$6 = i$5 `:host{--_container-color: var(--md-filled-button-container
  * SPDX-License-Identifier: Apache-2.0
  */
 // Generated stylesheet for ./button/internal/shared-elevation-styles.css.
-const styles$5 = i$5 `md-elevation{transition-duration:280ms}:host(:is([disabled],[soft-disabled])) md-elevation{transition:none}md-elevation{--md-elevation-level: var(--_container-elevation);--md-elevation-shadow-color: var(--_container-shadow-color)}:host(:focus-within) md-elevation{--md-elevation-level: var(--_focus-container-elevation)}:host(:hover) md-elevation{--md-elevation-level: var(--_hover-container-elevation)}:host(:active) md-elevation{--md-elevation-level: var(--_pressed-container-elevation)}:host(:is([disabled],[soft-disabled])) md-elevation{--md-elevation-level: var(--_disabled-container-elevation)}
+const styles$7 = i$5 `md-elevation{transition-duration:280ms}:host(:is([disabled],[soft-disabled])) md-elevation{transition:none}md-elevation{--md-elevation-level: var(--_container-elevation);--md-elevation-shadow-color: var(--_container-shadow-color)}:host(:focus-within) md-elevation{--md-elevation-level: var(--_focus-container-elevation)}:host(:hover) md-elevation{--md-elevation-level: var(--_hover-container-elevation)}:host(:active) md-elevation{--md-elevation-level: var(--_pressed-container-elevation)}:host(:is([disabled],[soft-disabled])) md-elevation{--md-elevation-level: var(--_disabled-container-elevation)}
 `;
 
 /**
@@ -46038,7 +46047,7 @@ const styles$5 = i$5 `md-elevation{transition-duration:280ms}:host(:is([disabled
  * SPDX-License-Identifier: Apache-2.0
  */
 // Generated stylesheet for ./button/internal/shared-styles.css.
-const styles$4 = i$5 `:host{border-start-start-radius:var(--_container-shape-start-start);border-start-end-radius:var(--_container-shape-start-end);border-end-start-radius:var(--_container-shape-end-start);border-end-end-radius:var(--_container-shape-end-end);box-sizing:border-box;cursor:pointer;display:inline-flex;gap:8px;min-height:var(--_container-height);outline:none;padding-block:calc((var(--_container-height) - max(var(--_label-text-line-height),var(--_icon-size)))/2);padding-inline-start:var(--_leading-space);padding-inline-end:var(--_trailing-space);place-content:center;place-items:center;position:relative;font-family:var(--_label-text-font);font-size:var(--_label-text-size);line-height:var(--_label-text-line-height);font-weight:var(--_label-text-weight);text-overflow:ellipsis;text-wrap:nowrap;user-select:none;-webkit-tap-highlight-color:rgba(0,0,0,0);vertical-align:top;--md-ripple-hover-color: var(--_hover-state-layer-color);--md-ripple-pressed-color: var(--_pressed-state-layer-color);--md-ripple-hover-opacity: var(--_hover-state-layer-opacity);--md-ripple-pressed-opacity: var(--_pressed-state-layer-opacity)}md-focus-ring{--md-focus-ring-shape-start-start: var(--_container-shape-start-start);--md-focus-ring-shape-start-end: var(--_container-shape-start-end);--md-focus-ring-shape-end-end: var(--_container-shape-end-end);--md-focus-ring-shape-end-start: var(--_container-shape-end-start)}:host(:is([disabled],[soft-disabled])){cursor:default;pointer-events:none}.button{border-radius:inherit;cursor:inherit;display:inline-flex;align-items:center;justify-content:center;border:none;outline:none;-webkit-appearance:none;vertical-align:middle;background:rgba(0,0,0,0);text-decoration:none;min-width:calc(64px - var(--_leading-space) - var(--_trailing-space));width:100%;z-index:0;height:100%;font:inherit;color:var(--_label-text-color);padding:0;gap:inherit;text-transform:inherit}.button::-moz-focus-inner{padding:0;border:0}:host(:hover) .button{color:var(--_hover-label-text-color)}:host(:focus-within) .button{color:var(--_focus-label-text-color)}:host(:active) .button{color:var(--_pressed-label-text-color)}.background{background:var(--_container-color);border-radius:inherit;inset:0;position:absolute}.label{overflow:hidden}:is(.button,.label,.label slot),.label ::slotted(*){text-overflow:inherit}:host(:is([disabled],[soft-disabled])) .label{color:var(--_disabled-label-text-color);opacity:var(--_disabled-label-text-opacity)}:host(:is([disabled],[soft-disabled])) .background{background:var(--_disabled-container-color);opacity:var(--_disabled-container-opacity)}@media(forced-colors: active){.background{border:1px solid CanvasText}:host(:is([disabled],[soft-disabled])){--_disabled-icon-color: GrayText;--_disabled-icon-opacity: 1;--_disabled-container-opacity: 1;--_disabled-label-text-color: GrayText;--_disabled-label-text-opacity: 1}}:host([has-icon]:not([trailing-icon])){padding-inline-start:var(--_with-leading-icon-leading-space);padding-inline-end:var(--_with-leading-icon-trailing-space)}:host([has-icon][trailing-icon]){padding-inline-start:var(--_with-trailing-icon-leading-space);padding-inline-end:var(--_with-trailing-icon-trailing-space)}::slotted([slot=icon]){display:inline-flex;position:relative;writing-mode:horizontal-tb;fill:currentColor;flex-shrink:0;color:var(--_icon-color);font-size:var(--_icon-size);inline-size:var(--_icon-size);block-size:var(--_icon-size)}:host(:hover) ::slotted([slot=icon]){color:var(--_hover-icon-color)}:host(:focus-within) ::slotted([slot=icon]){color:var(--_focus-icon-color)}:host(:active) ::slotted([slot=icon]){color:var(--_pressed-icon-color)}:host(:is([disabled],[soft-disabled])) ::slotted([slot=icon]){color:var(--_disabled-icon-color);opacity:var(--_disabled-icon-opacity)}.touch{position:absolute;top:50%;height:48px;left:0;right:0;transform:translateY(-50%)}:host([touch-target=wrapper]){margin:max(0px,(48px - var(--_container-height))/2) 0}:host([touch-target=none]) .touch{display:none}
+const styles$6 = i$5 `:host{border-start-start-radius:var(--_container-shape-start-start);border-start-end-radius:var(--_container-shape-start-end);border-end-start-radius:var(--_container-shape-end-start);border-end-end-radius:var(--_container-shape-end-end);box-sizing:border-box;cursor:pointer;display:inline-flex;gap:8px;min-height:var(--_container-height);outline:none;padding-block:calc((var(--_container-height) - max(var(--_label-text-line-height),var(--_icon-size)))/2);padding-inline-start:var(--_leading-space);padding-inline-end:var(--_trailing-space);place-content:center;place-items:center;position:relative;font-family:var(--_label-text-font);font-size:var(--_label-text-size);line-height:var(--_label-text-line-height);font-weight:var(--_label-text-weight);text-overflow:ellipsis;text-wrap:nowrap;user-select:none;-webkit-tap-highlight-color:rgba(0,0,0,0);vertical-align:top;--md-ripple-hover-color: var(--_hover-state-layer-color);--md-ripple-pressed-color: var(--_pressed-state-layer-color);--md-ripple-hover-opacity: var(--_hover-state-layer-opacity);--md-ripple-pressed-opacity: var(--_pressed-state-layer-opacity)}md-focus-ring{--md-focus-ring-shape-start-start: var(--_container-shape-start-start);--md-focus-ring-shape-start-end: var(--_container-shape-start-end);--md-focus-ring-shape-end-end: var(--_container-shape-end-end);--md-focus-ring-shape-end-start: var(--_container-shape-end-start)}:host(:is([disabled],[soft-disabled])){cursor:default;pointer-events:none}.button{border-radius:inherit;cursor:inherit;display:inline-flex;align-items:center;justify-content:center;border:none;outline:none;-webkit-appearance:none;vertical-align:middle;background:rgba(0,0,0,0);text-decoration:none;min-width:calc(64px - var(--_leading-space) - var(--_trailing-space));width:100%;z-index:0;height:100%;font:inherit;color:var(--_label-text-color);padding:0;gap:inherit;text-transform:inherit}.button::-moz-focus-inner{padding:0;border:0}:host(:hover) .button{color:var(--_hover-label-text-color)}:host(:focus-within) .button{color:var(--_focus-label-text-color)}:host(:active) .button{color:var(--_pressed-label-text-color)}.background{background:var(--_container-color);border-radius:inherit;inset:0;position:absolute}.label{overflow:hidden}:is(.button,.label,.label slot),.label ::slotted(*){text-overflow:inherit}:host(:is([disabled],[soft-disabled])) .label{color:var(--_disabled-label-text-color);opacity:var(--_disabled-label-text-opacity)}:host(:is([disabled],[soft-disabled])) .background{background:var(--_disabled-container-color);opacity:var(--_disabled-container-opacity)}@media(forced-colors: active){.background{border:1px solid CanvasText}:host(:is([disabled],[soft-disabled])){--_disabled-icon-color: GrayText;--_disabled-icon-opacity: 1;--_disabled-container-opacity: 1;--_disabled-label-text-color: GrayText;--_disabled-label-text-opacity: 1}}:host([has-icon]:not([trailing-icon])){padding-inline-start:var(--_with-leading-icon-leading-space);padding-inline-end:var(--_with-leading-icon-trailing-space)}:host([has-icon][trailing-icon]){padding-inline-start:var(--_with-trailing-icon-leading-space);padding-inline-end:var(--_with-trailing-icon-trailing-space)}::slotted([slot=icon]){display:inline-flex;position:relative;writing-mode:horizontal-tb;fill:currentColor;flex-shrink:0;color:var(--_icon-color);font-size:var(--_icon-size);inline-size:var(--_icon-size);block-size:var(--_icon-size)}:host(:hover) ::slotted([slot=icon]){color:var(--_hover-icon-color)}:host(:focus-within) ::slotted([slot=icon]){color:var(--_focus-icon-color)}:host(:active) ::slotted([slot=icon]){color:var(--_pressed-icon-color)}:host(:is([disabled],[soft-disabled])) ::slotted([slot=icon]){color:var(--_disabled-icon-color);opacity:var(--_disabled-icon-opacity)}.touch{position:absolute;top:50%;height:48px;left:0;right:0;transform:translateY(-50%)}:host([touch-target=wrapper]){margin:max(0px,(48px - var(--_container-height))/2) 0}:host([touch-target=none]) .touch{display:none}
 `;
 
 /**
@@ -46074,14 +46083,14 @@ const styles$4 = i$5 `:host{border-start-start-radius:var(--_container-shape-sta
 class OscdFilledButton extends ScopedElementsMixin(FilledButton) {
 }
 OscdFilledButton.scopedElements = {
-    'md-ripple': MdRipple,
-    'md-focus-ring': MdFocusRing,
-    'md-elevation': MdElevation,
+    'md-ripple': OscdRipple,
+    'md-focus-ring': OscdFocusRing,
+    'md-elevation': OscdElevation,
 };
 OscdFilledButton.styles = [
-    styles$4,
-    styles$5,
     styles$6,
+    styles$7,
+    styles$8,
 ];
 
 /**
@@ -46117,7 +46126,7 @@ class Icon extends i$2 {
  * SPDX-License-Identifier: Apache-2.0
  */
 // Generated stylesheet for ./icon/internal/icon-styles.css.
-const styles$3 = i$5 `:host{font-size:var(--md-icon-size, 24px);width:var(--md-icon-size, 24px);height:var(--md-icon-size, 24px);color:inherit;font-variation-settings:inherit;font-weight:400;font-family:var(--md-icon-font, Material Symbols Outlined);display:inline-flex;font-style:normal;place-items:center;place-content:center;line-height:1;overflow:hidden;letter-spacing:normal;text-transform:none;user-select:none;white-space:nowrap;word-wrap:normal;flex-shrink:0;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;-moz-osx-font-smoothing:grayscale}::slotted(svg){fill:currentColor}::slotted(*){height:100%;width:100%}
+const styles$5 = i$5 `:host{font-size:var(--md-icon-size, 24px);width:var(--md-icon-size, 24px);height:var(--md-icon-size, 24px);color:inherit;font-variation-settings:inherit;font-weight:400;font-family:var(--md-icon-font, Material Symbols Outlined);display:inline-flex;font-style:normal;place-items:center;place-content:center;line-height:1;overflow:hidden;letter-spacing:normal;text-transform:none;user-select:none;white-space:nowrap;word-wrap:normal;flex-shrink:0;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;-moz-osx-font-smoothing:grayscale}::slotted(svg){fill:currentColor}::slotted(*){height:100%;width:100%}
 `;
 
 /*
@@ -46133,7 +46142,7 @@ const styles$3 = i$5 `:host{font-size:var(--md-icon-size, 24px);width:var(--md-i
 class OscdIcon extends Icon {
 }
 /** @nocollapse */
-OscdIcon.styles = [styles$3];
+OscdIcon.styles = [styles$5];
 
 /**
  * @license
@@ -46426,7 +46435,7 @@ __decorate$1([
  * SPDX-License-Identifier: Apache-2.0
  */
 // Generated stylesheet for ./iconbutton/internal/outlined-styles.css.
-const styles$2 = i$5 `:host{--_container-height: var(--md-outlined-icon-button-container-height, 40px);--_container-width: var(--md-outlined-icon-button-container-width, 40px);--_disabled-icon-color: var(--md-outlined-icon-button-disabled-icon-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-icon-opacity: var(--md-outlined-icon-button-disabled-icon-opacity, 0.38);--_disabled-selected-container-color: var(--md-outlined-icon-button-disabled-selected-container-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-selected-container-opacity: var(--md-outlined-icon-button-disabled-selected-container-opacity, 0.12);--_hover-state-layer-opacity: var(--md-outlined-icon-button-hover-state-layer-opacity, 0.08);--_icon-size: var(--md-outlined-icon-button-icon-size, 24px);--_pressed-state-layer-opacity: var(--md-outlined-icon-button-pressed-state-layer-opacity, 0.12);--_selected-container-color: var(--md-outlined-icon-button-selected-container-color, var(--md-sys-color-inverse-surface, #322f35));--_selected-focus-icon-color: var(--md-outlined-icon-button-selected-focus-icon-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_selected-hover-icon-color: var(--md-outlined-icon-button-selected-hover-icon-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_selected-hover-state-layer-color: var(--md-outlined-icon-button-selected-hover-state-layer-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_selected-icon-color: var(--md-outlined-icon-button-selected-icon-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_selected-pressed-icon-color: var(--md-outlined-icon-button-selected-pressed-icon-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_selected-pressed-state-layer-color: var(--md-outlined-icon-button-selected-pressed-state-layer-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_disabled-outline-color: var(--md-outlined-icon-button-disabled-outline-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-outline-opacity: var(--md-outlined-icon-button-disabled-outline-opacity, 0.12);--_focus-icon-color: var(--md-outlined-icon-button-focus-icon-color, var(--md-sys-color-on-surface-variant, #49454f));--_hover-icon-color: var(--md-outlined-icon-button-hover-icon-color, var(--md-sys-color-on-surface-variant, #49454f));--_hover-state-layer-color: var(--md-outlined-icon-button-hover-state-layer-color, var(--md-sys-color-on-surface-variant, #49454f));--_icon-color: var(--md-outlined-icon-button-icon-color, var(--md-sys-color-on-surface-variant, #49454f));--_outline-color: var(--md-outlined-icon-button-outline-color, var(--md-sys-color-outline, #79747e));--_outline-width: var(--md-outlined-icon-button-outline-width, 1px);--_pressed-icon-color: var(--md-outlined-icon-button-pressed-icon-color, var(--md-sys-color-on-surface, #1d1b20));--_pressed-state-layer-color: var(--md-outlined-icon-button-pressed-state-layer-color, var(--md-sys-color-on-surface, #1d1b20));--_container-shape-start-start: var(--md-outlined-icon-button-container-shape-start-start, var(--md-outlined-icon-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-start-end: var(--md-outlined-icon-button-container-shape-start-end, var(--md-outlined-icon-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-end: var(--md-outlined-icon-button-container-shape-end-end, var(--md-outlined-icon-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-start: var(--md-outlined-icon-button-container-shape-end-start, var(--md-outlined-icon-button-container-shape, var(--md-sys-shape-corner-full, 9999px)))}.outlined{background-color:rgba(0,0,0,0);color:var(--_icon-color);--md-ripple-hover-color: var(--_hover-state-layer-color);--md-ripple-hover-opacity: var(--_hover-state-layer-opacity);--md-ripple-pressed-color: var(--_pressed-state-layer-color);--md-ripple-pressed-opacity: var(--_pressed-state-layer-opacity)}.outlined::before{border-color:var(--_outline-color);border-width:var(--_outline-width)}.outlined:hover{color:var(--_hover-icon-color)}.outlined:focus{color:var(--_focus-icon-color)}.outlined:active{color:var(--_pressed-icon-color)}.outlined:is(:disabled,[aria-disabled=true]){color:var(--_disabled-icon-color)}.outlined:is(:disabled,[aria-disabled=true])::before{border-color:var(--_disabled-outline-color);opacity:var(--_disabled-outline-opacity)}.outlined:is(:disabled,[aria-disabled=true]) .icon{opacity:var(--_disabled-icon-opacity)}.outlined::before{block-size:100%;border-style:solid;border-radius:inherit;box-sizing:border-box;content:"";inline-size:100%;inset:0;pointer-events:none;position:absolute;z-index:-1}.outlined.selected::before{border-width:0}.selected{--md-ripple-hover-color: var(--_selected-hover-state-layer-color);--md-ripple-hover-opacity: var(--_hover-state-layer-opacity);--md-ripple-pressed-color: var(--_selected-pressed-state-layer-color);--md-ripple-pressed-opacity: var(--_pressed-state-layer-opacity)}.selected:not(:disabled,[aria-disabled=true]){color:var(--_selected-icon-color)}.selected:not(:disabled,[aria-disabled=true]):hover{color:var(--_selected-hover-icon-color)}.selected:not(:disabled,[aria-disabled=true]):focus{color:var(--_selected-focus-icon-color)}.selected:not(:disabled,[aria-disabled=true]):active{color:var(--_selected-pressed-icon-color)}.selected:not(:disabled,[aria-disabled=true])::before{background-color:var(--_selected-container-color)}.selected:is(:disabled,[aria-disabled=true])::before{background-color:var(--_disabled-selected-container-color);opacity:var(--_disabled-selected-container-opacity)}@media(forced-colors: active){:host(:is([disabled],[soft-disabled])){--_disabled-outline-opacity: 1}.selected::before{border-color:CanvasText;border-width:var(--_outline-width)}.selected:is(:disabled,[aria-disabled=true])::before{border-color:GrayText;opacity:1}}
+const styles$4 = i$5 `:host{--_container-height: var(--md-outlined-icon-button-container-height, 40px);--_container-width: var(--md-outlined-icon-button-container-width, 40px);--_disabled-icon-color: var(--md-outlined-icon-button-disabled-icon-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-icon-opacity: var(--md-outlined-icon-button-disabled-icon-opacity, 0.38);--_disabled-selected-container-color: var(--md-outlined-icon-button-disabled-selected-container-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-selected-container-opacity: var(--md-outlined-icon-button-disabled-selected-container-opacity, 0.12);--_hover-state-layer-opacity: var(--md-outlined-icon-button-hover-state-layer-opacity, 0.08);--_icon-size: var(--md-outlined-icon-button-icon-size, 24px);--_pressed-state-layer-opacity: var(--md-outlined-icon-button-pressed-state-layer-opacity, 0.12);--_selected-container-color: var(--md-outlined-icon-button-selected-container-color, var(--md-sys-color-inverse-surface, #322f35));--_selected-focus-icon-color: var(--md-outlined-icon-button-selected-focus-icon-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_selected-hover-icon-color: var(--md-outlined-icon-button-selected-hover-icon-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_selected-hover-state-layer-color: var(--md-outlined-icon-button-selected-hover-state-layer-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_selected-icon-color: var(--md-outlined-icon-button-selected-icon-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_selected-pressed-icon-color: var(--md-outlined-icon-button-selected-pressed-icon-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_selected-pressed-state-layer-color: var(--md-outlined-icon-button-selected-pressed-state-layer-color, var(--md-sys-color-inverse-on-surface, #f5eff7));--_disabled-outline-color: var(--md-outlined-icon-button-disabled-outline-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-outline-opacity: var(--md-outlined-icon-button-disabled-outline-opacity, 0.12);--_focus-icon-color: var(--md-outlined-icon-button-focus-icon-color, var(--md-sys-color-on-surface-variant, #49454f));--_hover-icon-color: var(--md-outlined-icon-button-hover-icon-color, var(--md-sys-color-on-surface-variant, #49454f));--_hover-state-layer-color: var(--md-outlined-icon-button-hover-state-layer-color, var(--md-sys-color-on-surface-variant, #49454f));--_icon-color: var(--md-outlined-icon-button-icon-color, var(--md-sys-color-on-surface-variant, #49454f));--_outline-color: var(--md-outlined-icon-button-outline-color, var(--md-sys-color-outline, #79747e));--_outline-width: var(--md-outlined-icon-button-outline-width, 1px);--_pressed-icon-color: var(--md-outlined-icon-button-pressed-icon-color, var(--md-sys-color-on-surface, #1d1b20));--_pressed-state-layer-color: var(--md-outlined-icon-button-pressed-state-layer-color, var(--md-sys-color-on-surface, #1d1b20));--_container-shape-start-start: var(--md-outlined-icon-button-container-shape-start-start, var(--md-outlined-icon-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-start-end: var(--md-outlined-icon-button-container-shape-start-end, var(--md-outlined-icon-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-end: var(--md-outlined-icon-button-container-shape-end-end, var(--md-outlined-icon-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-start: var(--md-outlined-icon-button-container-shape-end-start, var(--md-outlined-icon-button-container-shape, var(--md-sys-shape-corner-full, 9999px)))}.outlined{background-color:rgba(0,0,0,0);color:var(--_icon-color);--md-ripple-hover-color: var(--_hover-state-layer-color);--md-ripple-hover-opacity: var(--_hover-state-layer-opacity);--md-ripple-pressed-color: var(--_pressed-state-layer-color);--md-ripple-pressed-opacity: var(--_pressed-state-layer-opacity)}.outlined::before{border-color:var(--_outline-color);border-width:var(--_outline-width)}.outlined:hover{color:var(--_hover-icon-color)}.outlined:focus{color:var(--_focus-icon-color)}.outlined:active{color:var(--_pressed-icon-color)}.outlined:is(:disabled,[aria-disabled=true]){color:var(--_disabled-icon-color)}.outlined:is(:disabled,[aria-disabled=true])::before{border-color:var(--_disabled-outline-color);opacity:var(--_disabled-outline-opacity)}.outlined:is(:disabled,[aria-disabled=true]) .icon{opacity:var(--_disabled-icon-opacity)}.outlined::before{block-size:100%;border-style:solid;border-radius:inherit;box-sizing:border-box;content:"";inline-size:100%;inset:0;pointer-events:none;position:absolute;z-index:-1}.outlined.selected::before{border-width:0}.selected{--md-ripple-hover-color: var(--_selected-hover-state-layer-color);--md-ripple-hover-opacity: var(--_hover-state-layer-opacity);--md-ripple-pressed-color: var(--_selected-pressed-state-layer-color);--md-ripple-pressed-opacity: var(--_pressed-state-layer-opacity)}.selected:not(:disabled,[aria-disabled=true]){color:var(--_selected-icon-color)}.selected:not(:disabled,[aria-disabled=true]):hover{color:var(--_selected-hover-icon-color)}.selected:not(:disabled,[aria-disabled=true]):focus{color:var(--_selected-focus-icon-color)}.selected:not(:disabled,[aria-disabled=true]):active{color:var(--_selected-pressed-icon-color)}.selected:not(:disabled,[aria-disabled=true])::before{background-color:var(--_selected-container-color)}.selected:is(:disabled,[aria-disabled=true])::before{background-color:var(--_disabled-selected-container-color);opacity:var(--_disabled-selected-container-opacity)}@media(forced-colors: active){:host(:is([disabled],[soft-disabled])){--_disabled-outline-opacity: 1}.selected::before{border-color:CanvasText;border-width:var(--_outline-width)}.selected:is(:disabled,[aria-disabled=true])::before{border-color:GrayText;opacity:1}}
 `;
 
 /**
@@ -46435,7 +46444,7 @@ const styles$2 = i$5 `:host{--_container-height: var(--md-outlined-icon-button-c
  * SPDX-License-Identifier: Apache-2.0
  */
 // Generated stylesheet for ./iconbutton/internal/shared-styles.css.
-const styles$1 = i$5 `:host{display:inline-flex;outline:none;-webkit-tap-highlight-color:rgba(0,0,0,0);height:var(--_container-height);width:var(--_container-width);justify-content:center}:host([touch-target=wrapper]){margin:max(0px,(48px - var(--_container-height))/2) max(0px,(48px - var(--_container-width))/2)}md-focus-ring{--md-focus-ring-shape-start-start: var(--_container-shape-start-start);--md-focus-ring-shape-start-end: var(--_container-shape-start-end);--md-focus-ring-shape-end-end: var(--_container-shape-end-end);--md-focus-ring-shape-end-start: var(--_container-shape-end-start)}:host(:is([disabled],[soft-disabled])){pointer-events:none}.icon-button{place-items:center;background:none;border:none;box-sizing:border-box;cursor:pointer;display:flex;place-content:center;outline:none;padding:0;position:relative;text-decoration:none;user-select:none;z-index:0;flex:1;border-start-start-radius:var(--_container-shape-start-start);border-start-end-radius:var(--_container-shape-start-end);border-end-start-radius:var(--_container-shape-end-start);border-end-end-radius:var(--_container-shape-end-end)}.icon ::slotted(*){font-size:var(--_icon-size);height:var(--_icon-size);width:var(--_icon-size);font-weight:inherit}md-ripple{z-index:-1;border-start-start-radius:var(--_container-shape-start-start);border-start-end-radius:var(--_container-shape-start-end);border-end-start-radius:var(--_container-shape-end-start);border-end-end-radius:var(--_container-shape-end-end)}.flip-icon .icon{transform:scaleX(-1)}.icon{display:inline-flex}.link{display:grid;height:100%;outline:none;place-items:center;position:absolute;width:100%}.touch{position:absolute;height:max(48px,100%);width:max(48px,100%)}:host([touch-target=none]) .touch{display:none}@media(forced-colors: active){:host(:is([disabled],[soft-disabled])){--_disabled-icon-color: GrayText;--_disabled-icon-opacity: 1}}
+const styles$3 = i$5 `:host{display:inline-flex;outline:none;-webkit-tap-highlight-color:rgba(0,0,0,0);height:var(--_container-height);width:var(--_container-width);justify-content:center}:host([touch-target=wrapper]){margin:max(0px,(48px - var(--_container-height))/2) max(0px,(48px - var(--_container-width))/2)}md-focus-ring{--md-focus-ring-shape-start-start: var(--_container-shape-start-start);--md-focus-ring-shape-start-end: var(--_container-shape-start-end);--md-focus-ring-shape-end-end: var(--_container-shape-end-end);--md-focus-ring-shape-end-start: var(--_container-shape-end-start)}:host(:is([disabled],[soft-disabled])){pointer-events:none}.icon-button{place-items:center;background:none;border:none;box-sizing:border-box;cursor:pointer;display:flex;place-content:center;outline:none;padding:0;position:relative;text-decoration:none;user-select:none;z-index:0;flex:1;border-start-start-radius:var(--_container-shape-start-start);border-start-end-radius:var(--_container-shape-start-end);border-end-start-radius:var(--_container-shape-end-start);border-end-end-radius:var(--_container-shape-end-end)}.icon ::slotted(*){font-size:var(--_icon-size);height:var(--_icon-size);width:var(--_icon-size);font-weight:inherit}md-ripple{z-index:-1;border-start-start-radius:var(--_container-shape-start-start);border-start-end-radius:var(--_container-shape-start-end);border-end-start-radius:var(--_container-shape-end-start);border-end-end-radius:var(--_container-shape-end-end)}.flip-icon .icon{transform:scaleX(-1)}.icon{display:inline-flex}.link{display:grid;height:100%;outline:none;place-items:center;position:absolute;width:100%}.touch{position:absolute;height:max(48px,100%);width:max(48px,100%)}:host([touch-target=none]) .touch{display:none}@media(forced-colors: active){:host(:is([disabled],[soft-disabled])){--_disabled-icon-color: GrayText;--_disabled-icon-opacity: 1}}
 `;
 
 /**
@@ -46475,10 +46484,10 @@ class OscdOutlinedIconButton extends ScopedElementsMixin(IconButton) {
     }
 }
 OscdOutlinedIconButton.scopedElements = {
-    'md-ripple': MdRipple,
-    'md-focus-ring': MdFocusRing,
+    'md-ripple': OscdRipple,
+    'md-focus-ring': OscdFocusRing,
 };
-OscdOutlinedIconButton.styles = [styles$1, styles$2];
+OscdOutlinedIconButton.styles = [styles$3, styles$4];
 
 /**
  * @license
@@ -46500,7 +46509,7 @@ class OutlinedButton extends Button {
  * SPDX-License-Identifier: Apache-2.0
  */
 // Generated stylesheet for ./button/internal/outlined-styles.css.
-const styles = i$5 `:host{--_container-height: var(--md-outlined-button-container-height, 40px);--_disabled-label-text-color: var(--md-outlined-button-disabled-label-text-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-label-text-opacity: var(--md-outlined-button-disabled-label-text-opacity, 0.38);--_disabled-outline-color: var(--md-outlined-button-disabled-outline-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-outline-opacity: var(--md-outlined-button-disabled-outline-opacity, 0.12);--_focus-label-text-color: var(--md-outlined-button-focus-label-text-color, var(--md-sys-color-primary, #6750a4));--_hover-label-text-color: var(--md-outlined-button-hover-label-text-color, var(--md-sys-color-primary, #6750a4));--_hover-state-layer-color: var(--md-outlined-button-hover-state-layer-color, var(--md-sys-color-primary, #6750a4));--_hover-state-layer-opacity: var(--md-outlined-button-hover-state-layer-opacity, 0.08);--_label-text-color: var(--md-outlined-button-label-text-color, var(--md-sys-color-primary, #6750a4));--_label-text-font: var(--md-outlined-button-label-text-font, var(--md-sys-typescale-label-large-font, var(--md-ref-typeface-plain, Roboto)));--_label-text-line-height: var(--md-outlined-button-label-text-line-height, var(--md-sys-typescale-label-large-line-height, 1.25rem));--_label-text-size: var(--md-outlined-button-label-text-size, var(--md-sys-typescale-label-large-size, 0.875rem));--_label-text-weight: var(--md-outlined-button-label-text-weight, var(--md-sys-typescale-label-large-weight, var(--md-ref-typeface-weight-medium, 500)));--_outline-color: var(--md-outlined-button-outline-color, var(--md-sys-color-outline, #79747e));--_outline-width: var(--md-outlined-button-outline-width, 1px);--_pressed-label-text-color: var(--md-outlined-button-pressed-label-text-color, var(--md-sys-color-primary, #6750a4));--_pressed-outline-color: var(--md-outlined-button-pressed-outline-color, var(--md-sys-color-outline, #79747e));--_pressed-state-layer-color: var(--md-outlined-button-pressed-state-layer-color, var(--md-sys-color-primary, #6750a4));--_pressed-state-layer-opacity: var(--md-outlined-button-pressed-state-layer-opacity, 0.12);--_disabled-icon-color: var(--md-outlined-button-disabled-icon-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-icon-opacity: var(--md-outlined-button-disabled-icon-opacity, 0.38);--_focus-icon-color: var(--md-outlined-button-focus-icon-color, var(--md-sys-color-primary, #6750a4));--_hover-icon-color: var(--md-outlined-button-hover-icon-color, var(--md-sys-color-primary, #6750a4));--_icon-color: var(--md-outlined-button-icon-color, var(--md-sys-color-primary, #6750a4));--_icon-size: var(--md-outlined-button-icon-size, 18px);--_pressed-icon-color: var(--md-outlined-button-pressed-icon-color, var(--md-sys-color-primary, #6750a4));--_container-shape-start-start: var(--md-outlined-button-container-shape-start-start, var(--md-outlined-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-start-end: var(--md-outlined-button-container-shape-start-end, var(--md-outlined-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-end: var(--md-outlined-button-container-shape-end-end, var(--md-outlined-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-start: var(--md-outlined-button-container-shape-end-start, var(--md-outlined-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_leading-space: var(--md-outlined-button-leading-space, 24px);--_trailing-space: var(--md-outlined-button-trailing-space, 24px);--_with-leading-icon-leading-space: var(--md-outlined-button-with-leading-icon-leading-space, 16px);--_with-leading-icon-trailing-space: var(--md-outlined-button-with-leading-icon-trailing-space, 24px);--_with-trailing-icon-leading-space: var(--md-outlined-button-with-trailing-icon-leading-space, 24px);--_with-trailing-icon-trailing-space: var(--md-outlined-button-with-trailing-icon-trailing-space, 16px);--_container-color: none;--_disabled-container-color: none;--_disabled-container-opacity: 0}.outline{inset:0;border-style:solid;position:absolute;box-sizing:border-box;border-color:var(--_outline-color);border-start-start-radius:var(--_container-shape-start-start);border-start-end-radius:var(--_container-shape-start-end);border-end-start-radius:var(--_container-shape-end-start);border-end-end-radius:var(--_container-shape-end-end)}:host(:active) .outline{border-color:var(--_pressed-outline-color)}:host(:is([disabled],[soft-disabled])) .outline{border-color:var(--_disabled-outline-color);opacity:var(--_disabled-outline-opacity)}@media(forced-colors: active){:host(:is([disabled],[soft-disabled])) .background{border-color:GrayText}:host(:is([disabled],[soft-disabled])) .outline{opacity:1}}.outline,md-ripple{border-width:var(--_outline-width)}md-ripple{inline-size:calc(100% - 2*var(--_outline-width));block-size:calc(100% - 2*var(--_outline-width));border-style:solid;border-color:rgba(0,0,0,0)}
+const styles$2 = i$5 `:host{--_container-height: var(--md-outlined-button-container-height, 40px);--_disabled-label-text-color: var(--md-outlined-button-disabled-label-text-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-label-text-opacity: var(--md-outlined-button-disabled-label-text-opacity, 0.38);--_disabled-outline-color: var(--md-outlined-button-disabled-outline-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-outline-opacity: var(--md-outlined-button-disabled-outline-opacity, 0.12);--_focus-label-text-color: var(--md-outlined-button-focus-label-text-color, var(--md-sys-color-primary, #6750a4));--_hover-label-text-color: var(--md-outlined-button-hover-label-text-color, var(--md-sys-color-primary, #6750a4));--_hover-state-layer-color: var(--md-outlined-button-hover-state-layer-color, var(--md-sys-color-primary, #6750a4));--_hover-state-layer-opacity: var(--md-outlined-button-hover-state-layer-opacity, 0.08);--_label-text-color: var(--md-outlined-button-label-text-color, var(--md-sys-color-primary, #6750a4));--_label-text-font: var(--md-outlined-button-label-text-font, var(--md-sys-typescale-label-large-font, var(--md-ref-typeface-plain, Roboto)));--_label-text-line-height: var(--md-outlined-button-label-text-line-height, var(--md-sys-typescale-label-large-line-height, 1.25rem));--_label-text-size: var(--md-outlined-button-label-text-size, var(--md-sys-typescale-label-large-size, 0.875rem));--_label-text-weight: var(--md-outlined-button-label-text-weight, var(--md-sys-typescale-label-large-weight, var(--md-ref-typeface-weight-medium, 500)));--_outline-color: var(--md-outlined-button-outline-color, var(--md-sys-color-outline, #79747e));--_outline-width: var(--md-outlined-button-outline-width, 1px);--_pressed-label-text-color: var(--md-outlined-button-pressed-label-text-color, var(--md-sys-color-primary, #6750a4));--_pressed-outline-color: var(--md-outlined-button-pressed-outline-color, var(--md-sys-color-outline, #79747e));--_pressed-state-layer-color: var(--md-outlined-button-pressed-state-layer-color, var(--md-sys-color-primary, #6750a4));--_pressed-state-layer-opacity: var(--md-outlined-button-pressed-state-layer-opacity, 0.12);--_disabled-icon-color: var(--md-outlined-button-disabled-icon-color, var(--md-sys-color-on-surface, #1d1b20));--_disabled-icon-opacity: var(--md-outlined-button-disabled-icon-opacity, 0.38);--_focus-icon-color: var(--md-outlined-button-focus-icon-color, var(--md-sys-color-primary, #6750a4));--_hover-icon-color: var(--md-outlined-button-hover-icon-color, var(--md-sys-color-primary, #6750a4));--_icon-color: var(--md-outlined-button-icon-color, var(--md-sys-color-primary, #6750a4));--_icon-size: var(--md-outlined-button-icon-size, 18px);--_pressed-icon-color: var(--md-outlined-button-pressed-icon-color, var(--md-sys-color-primary, #6750a4));--_container-shape-start-start: var(--md-outlined-button-container-shape-start-start, var(--md-outlined-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-start-end: var(--md-outlined-button-container-shape-start-end, var(--md-outlined-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-end: var(--md-outlined-button-container-shape-end-end, var(--md-outlined-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_container-shape-end-start: var(--md-outlined-button-container-shape-end-start, var(--md-outlined-button-container-shape, var(--md-sys-shape-corner-full, 9999px)));--_leading-space: var(--md-outlined-button-leading-space, 24px);--_trailing-space: var(--md-outlined-button-trailing-space, 24px);--_with-leading-icon-leading-space: var(--md-outlined-button-with-leading-icon-leading-space, 16px);--_with-leading-icon-trailing-space: var(--md-outlined-button-with-leading-icon-trailing-space, 24px);--_with-trailing-icon-leading-space: var(--md-outlined-button-with-trailing-icon-leading-space, 24px);--_with-trailing-icon-trailing-space: var(--md-outlined-button-with-trailing-icon-trailing-space, 16px);--_container-color: none;--_disabled-container-color: none;--_disabled-container-opacity: 0}.outline{inset:0;border-style:solid;position:absolute;box-sizing:border-box;border-color:var(--_outline-color);border-start-start-radius:var(--_container-shape-start-start);border-start-end-radius:var(--_container-shape-start-end);border-end-start-radius:var(--_container-shape-end-start);border-end-end-radius:var(--_container-shape-end-end)}:host(:active) .outline{border-color:var(--_pressed-outline-color)}:host(:is([disabled],[soft-disabled])) .outline{border-color:var(--_disabled-outline-color);opacity:var(--_disabled-outline-opacity)}@media(forced-colors: active){:host(:is([disabled],[soft-disabled])) .background{border-color:GrayText}:host(:is([disabled],[soft-disabled])) .outline{opacity:1}}.outline,md-ripple{border-width:var(--_outline-width)}md-ripple{inline-size:calc(100% - 2*var(--_outline-width));block-size:calc(100% - 2*var(--_outline-width));border-style:solid;border-color:rgba(0,0,0,0)}
 `;
 
 /**
@@ -46538,10 +46547,893 @@ const styles = i$5 `:host{--_container-height: var(--md-outlined-button-containe
 class OscdOutlinedButton extends ScopedElementsMixin(OutlinedButton) {
 }
 OscdOutlinedButton.scopedElements = {
-    'md-ripple': MdRipple,
-    'md-focus-ring': MdFocusRing,
+    'md-ripple': OscdRipple,
+    'md-focus-ring': OscdFocusRing,
 };
-OscdOutlinedButton.styles = [styles$4, styles];
+OscdOutlinedButton.styles = [styles$6, styles$2];
+
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * A divider component.
+ */
+class Divider extends i$2 {
+    constructor() {
+        super(...arguments);
+        /**
+         * Indents the divider with equal padding on both sides.
+         */
+        this.inset = false;
+        /**
+         * Indents the divider with padding on the leading side.
+         */
+        this.insetStart = false;
+        /**
+         * Indents the divider with padding on the trailing side.
+         */
+        this.insetEnd = false;
+    }
+}
+__decorate$1([
+    n$1({ type: Boolean, reflect: true })
+], Divider.prototype, "inset", void 0);
+__decorate$1([
+    n$1({ type: Boolean, reflect: true, attribute: 'inset-start' })
+], Divider.prototype, "insetStart", void 0);
+__decorate$1([
+    n$1({ type: Boolean, reflect: true, attribute: 'inset-end' })
+], Divider.prototype, "insetEnd", void 0);
+
+/**
+ * @license
+ * Copyright 2024 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+// Generated stylesheet for ./divider/internal/divider-styles.css.
+const styles$1 = i$5 `:host{box-sizing:border-box;color:var(--md-divider-color, var(--md-sys-color-outline-variant, #cac4d0));display:flex;height:var(--md-divider-thickness, 1px);width:100%}:host([inset]),:host([inset-start]){padding-inline-start:16px}:host([inset]),:host([inset-end]){padding-inline-end:16px}:host::before{background:currentColor;content:"";height:100%;width:100%}@media(forced-colors: active){:host::before{background:CanvasText}}
+`;
+
+/*
+ * GENERATED SOURCE FILE. DO NOT MODIFY.
+ * Modifications will be overwritten.
+ * To prevent this file from being overwritten, remove this comment entirely.
+ */
+/**
+ * @tagname oscd-divider
+ * @summary A divider is a thin line that groups content in lists and
+ * containers.
+ *
+ * list items or define tappable regions in an accordion.
+ *
+ * @final
+ * @suppress {visibility}
+ */
+class OscdDivider extends Divider {
+}
+OscdDivider.styles = [styles$1];
+
+/**
+ * @license
+ * Copyright 2021 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * Re-dispatches an event from the provided element.
+ *
+ * This function is useful for forwarding non-composed events, such as `change`
+ * events.
+ *
+ * @example
+ * class MyInput extends LitElement {
+ *   render() {
+ *     return html`<input @change=${this.redispatchEvent}>`;
+ *   }
+ *
+ *   protected redispatchEvent(event: Event) {
+ *     redispatchEvent(this, event);
+ *   }
+ * }
+ *
+ * @param element The element to dispatch the event from.
+ * @param event The event to re-dispatch.
+ * @return Whether or not the event was dispatched (if cancelable).
+ */
+function redispatchEvent(element, event) {
+    // For bubbling events in SSR light DOM (or composed), stop their propagation
+    // and dispatch the copy.
+    if (event.bubbles && (!element.shadowRoot || event.composed)) {
+        event.stopPropagation();
+    }
+    const copy = Reflect.construct(event.constructor, [event.type, event]);
+    const dispatched = element.dispatchEvent(copy);
+    if (!dispatched) {
+        event.preventDefault();
+    }
+    return dispatched;
+}
+
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * The default dialog open animation.
+ */
+const DIALOG_DEFAULT_OPEN_ANIMATION = {
+    dialog: [
+        [
+            // Dialog slide down
+            [{ 'transform': 'translateY(-50px)' }, { 'transform': 'translateY(0)' }],
+            { duration: 500, easing: EASING.EMPHASIZED },
+        ],
+    ],
+    scrim: [
+        [
+            // Scrim fade in
+            [{ 'opacity': 0 }, { 'opacity': 0.32 }],
+            { duration: 500, easing: 'linear' },
+        ],
+    ],
+    container: [
+        [
+            // Container fade in
+            [{ 'opacity': 0 }, { 'opacity': 1 }],
+            { duration: 50, easing: 'linear', pseudoElement: '::before' },
+        ],
+        [
+            // Container grow
+            // Note: current spec says to grow from 0dp->100% and shrink from
+            // 100%->35%. We change this to 35%->100% to simplify the animation that
+            // is supposed to clip content as it grows. From 0dp it's possible to see
+            // text/actions appear before the container has fully grown.
+            [{ 'height': '35%' }, { 'height': '100%' }],
+            { duration: 500, easing: EASING.EMPHASIZED, pseudoElement: '::before' },
+        ],
+    ],
+    headline: [
+        [
+            // Headline fade in
+            [{ 'opacity': 0 }, { 'opacity': 0, offset: 0.2 }, { 'opacity': 1 }],
+            { duration: 250, easing: 'linear', fill: 'forwards' },
+        ],
+    ],
+    content: [
+        [
+            // Content fade in
+            [{ 'opacity': 0 }, { 'opacity': 0, offset: 0.2 }, { 'opacity': 1 }],
+            { duration: 250, easing: 'linear', fill: 'forwards' },
+        ],
+    ],
+    actions: [
+        [
+            // Actions fade in
+            [{ 'opacity': 0 }, { 'opacity': 0, offset: 0.5 }, { 'opacity': 1 }],
+            { duration: 300, easing: 'linear', fill: 'forwards' },
+        ],
+    ],
+};
+/**
+ * The default dialog close animation.
+ */
+const DIALOG_DEFAULT_CLOSE_ANIMATION = {
+    dialog: [
+        [
+            // Dialog slide up
+            [{ 'transform': 'translateY(0)' }, { 'transform': 'translateY(-50px)' }],
+            { duration: 150, easing: EASING.EMPHASIZED_ACCELERATE },
+        ],
+    ],
+    scrim: [
+        [
+            // Scrim fade out
+            [{ 'opacity': 0.32 }, { 'opacity': 0 }],
+            { duration: 150, easing: 'linear' },
+        ],
+    ],
+    container: [
+        [
+            // Container shrink
+            [{ 'height': '100%' }, { 'height': '35%' }],
+            {
+                duration: 150,
+                easing: EASING.EMPHASIZED_ACCELERATE,
+                pseudoElement: '::before',
+            },
+        ],
+        [
+            // Container fade out
+            [{ 'opacity': '1' }, { 'opacity': '0' }],
+            { delay: 100, duration: 50, easing: 'linear', pseudoElement: '::before' },
+        ],
+    ],
+    headline: [
+        [
+            // Headline fade out
+            [{ 'opacity': 1 }, { 'opacity': 0 }],
+            { duration: 100, easing: 'linear', fill: 'forwards' },
+        ],
+    ],
+    content: [
+        [
+            // Content fade out
+            [{ 'opacity': 1 }, { 'opacity': 0 }],
+            { duration: 100, easing: 'linear', fill: 'forwards' },
+        ],
+    ],
+    actions: [
+        [
+            // Actions fade out
+            [{ 'opacity': 1 }, { 'opacity': 0 }],
+            { duration: 100, easing: 'linear', fill: 'forwards' },
+        ],
+    ],
+};
+
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+// Separate variable needed for closure.
+const dialogBaseClass = mixinDelegatesAria(i$2);
+/**
+ * A dialog component.
+ *
+ * @fires open {Event} Dispatched when the dialog is opening before any animations.
+ * @fires opened {Event} Dispatched when the dialog has opened after any animations.
+ * @fires close {Event} Dispatched when the dialog is closing before any animations.
+ * @fires closed {Event} Dispatched when the dialog has closed after any animations.
+ * @fires cancel {Event} Dispatched when the dialog has been canceled by clicking
+ * on the scrim or pressing Escape.
+ */
+class Dialog extends dialogBaseClass {
+    // We do not use `delegatesFocus: true` due to a Chromium bug with
+    // selecting text.
+    // See https://bugs.chromium.org/p/chromium/issues/detail?id=950357
+    /**
+     * Opens the dialog when set to `true` and closes it when set to `false`.
+     */
+    get open() {
+        return this.isOpen;
+    }
+    set open(open) {
+        if (open === this.isOpen) {
+            return;
+        }
+        this.isOpen = open;
+        if (open) {
+            this.setAttribute('open', '');
+            this.show();
+        }
+        else {
+            this.removeAttribute('open');
+            this.close();
+        }
+    }
+    constructor() {
+        super();
+        /**
+         * Skips the opening and closing animations.
+         */
+        this.quick = false;
+        /**
+         * Gets or sets the dialog's return value, usually to indicate which button
+         * a user pressed to close it.
+         *
+         * https://developer.mozilla.org/en-US/docs/Web/API/HTMLDialogElement/returnValue
+         */
+        this.returnValue = '';
+        /**
+         * Disables focus trapping, which by default keeps keyboard Tab navigation
+         * within the dialog.
+         *
+         * When disabled, after focusing the last element of a dialog, pressing Tab
+         * again will release focus from the window back to the browser (such as the
+         * URL bar).
+         *
+         * Focus trapping is recommended for accessibility, and should not typically
+         * be disabled. Only turn this off if the use case of a dialog is more
+         * accessible without focus trapping.
+         */
+        this.noFocusTrap = false;
+        /**
+         * Gets the opening animation for a dialog. Set to a new function to customize
+         * the animation.
+         */
+        this.getOpenAnimation = () => DIALOG_DEFAULT_OPEN_ANIMATION;
+        /**
+         * Gets the closing animation for a dialog. Set to a new function to customize
+         * the animation.
+         */
+        this.getCloseAnimation = () => DIALOG_DEFAULT_CLOSE_ANIMATION;
+        this.isOpen = false;
+        this.isOpening = false;
+        this.isConnectedPromise = this.getIsConnectedPromise();
+        this.isAtScrollTop = false;
+        this.isAtScrollBottom = false;
+        this.nextClickIsFromContent = false;
+        // Dialogs should not be SSR'd while open, so we can just use runtime checks.
+        this.hasHeadline = false;
+        this.hasActions = false;
+        this.hasIcon = false;
+        // See https://bugs.chromium.org/p/chromium/issues/detail?id=1512224
+        // Chrome v120 has a bug where escape keys do not trigger cancels. If we get
+        // a dialog "close" event that is triggered without a "cancel" after an escape
+        // keydown, then we need to manually trigger our closing logic.
+        //
+        // This bug occurs when pressing escape to close a dialog without first
+        // interacting with the dialog's content.
+        //
+        // Cleanup tracking:
+        // https://github.com/material-components/material-web/issues/5330
+        // This can be removed when full CloseWatcher support added and the above bug
+        // in Chromium is fixed to fire 'cancel' with one escape press and close with
+        // multiple.
+        this.escapePressedWithoutCancel = false;
+        // This TreeWalker is used to walk through a dialog's children to find
+        // focusable elements. TreeWalker is faster than `querySelectorAll('*')`.
+        // We check for isServer because there isn't a "document" during an SSR
+        // run.
+        this.treewalker = document.createTreeWalker(this, NodeFilter.SHOW_ELEMENT);
+        {
+            this.addEventListener('submit', this.handleSubmit);
+        }
+    }
+    /**
+     * Opens the dialog and fires a cancelable `open` event. After a dialog's
+     * animation, an `opened` event is fired.
+     *
+     * Add an `autofocus` attribute to a child of the dialog that should
+     * receive focus after opening.
+     *
+     * @return A Promise that resolves after the animation is finished and the
+     *     `opened` event was fired.
+     */
+    async show() {
+        this.isOpening = true;
+        // Dialogs can be opened before being attached to the DOM, so we need to
+        // wait until we're connected before calling `showModal()`.
+        await this.isConnectedPromise;
+        await this.updateComplete;
+        const dialog = this.dialog;
+        // Check if already opened or if `dialog.close()` was called while awaiting.
+        if (dialog.open || !this.isOpening) {
+            this.isOpening = false;
+            return;
+        }
+        const preventOpen = !this.dispatchEvent(new Event('open', { cancelable: true }));
+        if (preventOpen) {
+            this.open = false;
+            this.isOpening = false;
+            return;
+        }
+        // All Material dialogs are modal.
+        dialog.showModal();
+        this.open = true;
+        // Reset scroll position if re-opening a dialog with the same content.
+        if (this.scroller) {
+            this.scroller.scrollTop = 0;
+        }
+        // Native modal dialogs ignore autofocus and instead force focus to the
+        // first focusable child. Override this behavior if there is a child with
+        // an autofocus attribute.
+        this.querySelector('[autofocus]')?.focus();
+        await this.animateDialog(this.getOpenAnimation());
+        this.dispatchEvent(new Event('opened'));
+        this.isOpening = false;
+    }
+    /**
+     * Closes the dialog and fires a cancelable `close` event. After a dialog's
+     * animation, a `closed` event is fired.
+     *
+     * @param returnValue A return value usually indicating which button was used
+     *     to close a dialog. If a dialog is canceled by clicking the scrim or
+     *     pressing Escape, it will not change the return value after closing.
+     * @return A Promise that resolves after the animation is finished and the
+     *     `closed` event was fired.
+     */
+    async close(returnValue = this.returnValue) {
+        this.isOpening = false;
+        if (!this.isConnected) {
+            // Disconnected dialogs do not fire close events or animate.
+            this.open = false;
+            return;
+        }
+        await this.updateComplete;
+        const dialog = this.dialog;
+        // Check if already closed or if `dialog.show()` was called while awaiting.
+        if (!dialog.open || this.isOpening) {
+            this.open = false;
+            return;
+        }
+        const prevReturnValue = this.returnValue;
+        this.returnValue = returnValue;
+        const preventClose = !this.dispatchEvent(new Event('close', { cancelable: true }));
+        if (preventClose) {
+            this.returnValue = prevReturnValue;
+            return;
+        }
+        await this.animateDialog(this.getCloseAnimation());
+        dialog.close(returnValue);
+        this.open = false;
+        this.dispatchEvent(new Event('closed'));
+    }
+    connectedCallback() {
+        super.connectedCallback();
+        this.isConnectedPromiseResolve();
+    }
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this.isConnectedPromise = this.getIsConnectedPromise();
+    }
+    render() {
+        const scrollable = this.open && !(this.isAtScrollTop && this.isAtScrollBottom);
+        const classes = {
+            'has-headline': this.hasHeadline,
+            'has-actions': this.hasActions,
+            'has-icon': this.hasIcon,
+            'scrollable': scrollable,
+            'show-top-divider': scrollable && !this.isAtScrollTop,
+            'show-bottom-divider': scrollable && !this.isAtScrollBottom,
+        };
+        // The focus trap sentinels are only added after the dialog opens, since
+        // dialog.showModal() will try to autofocus them, even with tabindex="-1".
+        const showFocusTrap = this.open && !this.noFocusTrap;
+        const focusTrap = x `
+      <div
+        class="focus-trap"
+        tabindex="0"
+        aria-hidden="true"
+        @focus=${this.handleFocusTrapFocus}></div>
+    `;
+        const { ariaLabel } = this;
+        return x `
+      <div class="scrim"></div>
+      <dialog
+        class=${e(classes)}
+        aria-label=${ariaLabel || E}
+        aria-labelledby=${this.hasHeadline ? 'headline' : E}
+        role=${this.type === 'alert' ? 'alertdialog' : E}
+        @cancel=${this.handleCancel}
+        @click=${this.handleDialogClick}
+        @close=${this.handleClose}
+        @keydown=${this.handleKeydown}
+        .returnValue=${this.returnValue || E}>
+        ${showFocusTrap ? focusTrap : E}
+        <div class="container" @click=${this.handleContentClick}>
+          <div class="headline">
+            <div class="icon" aria-hidden="true">
+              <slot name="icon" @slotchange=${this.handleIconChange}></slot>
+            </div>
+            <h2 id="headline" aria-hidden=${!this.hasHeadline || E}>
+              <slot
+                name="headline"
+                @slotchange=${this.handleHeadlineChange}></slot>
+            </h2>
+            <md-divider></md-divider>
+          </div>
+          <div class="scroller">
+            <div class="content">
+              <div class="top anchor"></div>
+              <slot name="content"></slot>
+              <div class="bottom anchor"></div>
+            </div>
+          </div>
+          <div class="actions">
+            <md-divider></md-divider>
+            <slot name="actions" @slotchange=${this.handleActionsChange}></slot>
+          </div>
+        </div>
+        ${showFocusTrap ? focusTrap : E}
+      </dialog>
+    `;
+    }
+    firstUpdated() {
+        this.intersectionObserver = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+                this.handleAnchorIntersection(entry);
+            }
+        }, { root: this.scroller });
+        this.intersectionObserver.observe(this.topAnchor);
+        this.intersectionObserver.observe(this.bottomAnchor);
+    }
+    handleDialogClick() {
+        if (this.nextClickIsFromContent) {
+            // Avoid doing a layout calculation below if we know the click came from
+            // content.
+            this.nextClickIsFromContent = false;
+            return;
+        }
+        // Click originated on the backdrop. Native `<dialog>`s will not cancel,
+        // but Material dialogs do.
+        const preventDefault = !this.dispatchEvent(new Event('cancel', { cancelable: true }));
+        if (preventDefault) {
+            return;
+        }
+        this.close();
+    }
+    handleContentClick() {
+        this.nextClickIsFromContent = true;
+    }
+    handleSubmit(event) {
+        const form = event.target;
+        const { submitter } = event;
+        if (form.getAttribute('method') !== 'dialog' || !submitter) {
+            return;
+        }
+        // Close reason is the submitter's value attribute, or the dialog's
+        // `returnValue` if there is no attribute.
+        this.close(submitter.getAttribute('value') ?? this.returnValue);
+    }
+    handleCancel(event) {
+        if (event.target !== this.dialog) {
+            // Ignore any cancel events dispatched by content.
+            return;
+        }
+        this.escapePressedWithoutCancel = false;
+        const preventDefault = !redispatchEvent(this, event);
+        // We always prevent default on the original dialog event since we'll
+        // animate closing it before it actually closes.
+        event.preventDefault();
+        if (preventDefault) {
+            return;
+        }
+        this.close();
+    }
+    handleClose() {
+        if (!this.escapePressedWithoutCancel) {
+            return;
+        }
+        this.escapePressedWithoutCancel = false;
+        this.dialog?.dispatchEvent(new Event('cancel', { cancelable: true }));
+    }
+    handleKeydown(event) {
+        if (event.key !== 'Escape') {
+            return;
+        }
+        // An escape key was pressed. If a "close" event fires next without a
+        // "cancel" event first, then we know we're in the Chrome v120 bug.
+        this.escapePressedWithoutCancel = true;
+        // Wait a full task for the cancel/close event listeners to fire, then
+        // reset the flag.
+        setTimeout(() => {
+            this.escapePressedWithoutCancel = false;
+        });
+    }
+    async animateDialog(animation) {
+        // Always cancel the previous animations. Animations can include `fill`
+        // modes that need to be cleared when `quick` is toggled. If not, content
+        // that faded out will remain hidden when a `quick` dialog re-opens after
+        // previously opening and closing without `quick`.
+        this.cancelAnimations?.abort();
+        this.cancelAnimations = new AbortController();
+        if (this.quick) {
+            return;
+        }
+        const { dialog, scrim, container, headline, content, actions } = this;
+        if (!dialog || !scrim || !container || !headline || !content || !actions) {
+            return;
+        }
+        const { container: containerAnimate, dialog: dialogAnimate, scrim: scrimAnimate, headline: headlineAnimate, content: contentAnimate, actions: actionsAnimate, } = animation;
+        const elementAndAnimation = [
+            [dialog, dialogAnimate ?? []],
+            [scrim, scrimAnimate ?? []],
+            [container, containerAnimate ?? []],
+            [headline, headlineAnimate ?? []],
+            [content, contentAnimate ?? []],
+            [actions, actionsAnimate ?? []],
+        ];
+        const animations = [];
+        for (const [element, animation] of elementAndAnimation) {
+            for (const animateArgs of animation) {
+                const animation = element.animate(...animateArgs);
+                this.cancelAnimations.signal.addEventListener('abort', () => {
+                    animation.cancel();
+                });
+                animations.push(animation);
+            }
+        }
+        await Promise.all(animations.map((animation) => animation.finished.catch(() => {
+            // Ignore intentional AbortErrors when calling `animation.cancel()`.
+        })));
+    }
+    handleHeadlineChange(event) {
+        const slot = event.target;
+        this.hasHeadline = slot.assignedElements().length > 0;
+    }
+    handleActionsChange(event) {
+        const slot = event.target;
+        this.hasActions = slot.assignedElements().length > 0;
+    }
+    handleIconChange(event) {
+        const slot = event.target;
+        this.hasIcon = slot.assignedElements().length > 0;
+    }
+    handleAnchorIntersection(entry) {
+        const { target, isIntersecting } = entry;
+        if (target === this.topAnchor) {
+            this.isAtScrollTop = isIntersecting;
+        }
+        if (target === this.bottomAnchor) {
+            this.isAtScrollBottom = isIntersecting;
+        }
+    }
+    getIsConnectedPromise() {
+        return new Promise((resolve) => {
+            this.isConnectedPromiseResolve = resolve;
+        });
+    }
+    handleFocusTrapFocus(event) {
+        const [firstFocusableChild, lastFocusableChild] = this.getFirstAndLastFocusableChildren();
+        if (!firstFocusableChild || !lastFocusableChild) {
+            // When a dialog does not have focusable children, the dialog itself
+            // receives focus.
+            this.dialog?.focus();
+            return;
+        }
+        // To determine which child to focus, we need to know which focus trap
+        // received focus...
+        const isFirstFocusTrap = event.target === this.firstFocusTrap;
+        const isLastFocusTrap = !isFirstFocusTrap;
+        // ...and where the focus came from (what was previously focused).
+        const focusCameFromFirstChild = event.relatedTarget === firstFocusableChild;
+        const focusCameFromLastChild = event.relatedTarget === lastFocusableChild;
+        // Although this is a focus trap, focus can come from outside the trap.
+        // This can happen when elements are programmatically `focus()`'d. It also
+        // happens when focus leaves and returns to the window, such as clicking on
+        // the browser's URL bar and pressing Tab, or switching focus between
+        // iframes.
+        const focusCameFromOutsideDialog = !focusCameFromFirstChild && !focusCameFromLastChild;
+        // Focus the dialog's first child when we reach the end of the dialog and
+        // focus is moving forward. Or, when focus is moving forwards into the
+        // dialog from outside of the window.
+        const shouldFocusFirstChild = (isLastFocusTrap && focusCameFromLastChild) ||
+            (isFirstFocusTrap && focusCameFromOutsideDialog);
+        if (shouldFocusFirstChild) {
+            firstFocusableChild.focus();
+            return;
+        }
+        // Focus the dialog's last child when we reach the beginning of the dialog
+        // and focus is moving backward. Or, when focus is moving backwards into the
+        // dialog from outside of the window.
+        const shouldFocusLastChild = (isFirstFocusTrap && focusCameFromFirstChild) ||
+            (isLastFocusTrap && focusCameFromOutsideDialog);
+        if (shouldFocusLastChild) {
+            lastFocusableChild.focus();
+            return;
+        }
+        // The booleans above are verbose for readability, but code executation
+        // won't actually reach here.
+    }
+    getFirstAndLastFocusableChildren() {
+        if (!this.treewalker) {
+            return [null, null];
+        }
+        let firstFocusableChild = null;
+        let lastFocusableChild = null;
+        // Reset the current node back to the root host element.
+        this.treewalker.currentNode = this.treewalker.root;
+        while (this.treewalker.nextNode()) {
+            // Cast as Element since the TreeWalker filter only accepts Elements.
+            const nextChild = this.treewalker.currentNode;
+            if (!isFocusable(nextChild)) {
+                continue;
+            }
+            if (!firstFocusableChild) {
+                firstFocusableChild = nextChild;
+            }
+            lastFocusableChild = nextChild;
+        }
+        // We set lastFocusableChild immediately after finding a
+        // firstFocusableChild, which means the pair is either both null or both
+        // non-null. Cast since TypeScript does not recognize this.
+        return [firstFocusableChild, lastFocusableChild];
+    }
+}
+__decorate$1([
+    n$1({ type: Boolean })
+], Dialog.prototype, "open", null);
+__decorate$1([
+    n$1({ type: Boolean })
+], Dialog.prototype, "quick", void 0);
+__decorate$1([
+    n$1({ attribute: false })
+], Dialog.prototype, "returnValue", void 0);
+__decorate$1([
+    n$1()
+], Dialog.prototype, "type", void 0);
+__decorate$1([
+    n$1({ type: Boolean, attribute: 'no-focus-trap' })
+], Dialog.prototype, "noFocusTrap", void 0);
+__decorate$1([
+    e$2('dialog')
+], Dialog.prototype, "dialog", void 0);
+__decorate$1([
+    e$2('.scrim')
+], Dialog.prototype, "scrim", void 0);
+__decorate$1([
+    e$2('.container')
+], Dialog.prototype, "container", void 0);
+__decorate$1([
+    e$2('.headline')
+], Dialog.prototype, "headline", void 0);
+__decorate$1([
+    e$2('.content')
+], Dialog.prototype, "content", void 0);
+__decorate$1([
+    e$2('.actions')
+], Dialog.prototype, "actions", void 0);
+__decorate$1([
+    r()
+], Dialog.prototype, "isAtScrollTop", void 0);
+__decorate$1([
+    r()
+], Dialog.prototype, "isAtScrollBottom", void 0);
+__decorate$1([
+    e$2('.scroller')
+], Dialog.prototype, "scroller", void 0);
+__decorate$1([
+    e$2('.top.anchor')
+], Dialog.prototype, "topAnchor", void 0);
+__decorate$1([
+    e$2('.bottom.anchor')
+], Dialog.prototype, "bottomAnchor", void 0);
+__decorate$1([
+    e$2('.focus-trap')
+], Dialog.prototype, "firstFocusTrap", void 0);
+__decorate$1([
+    r()
+], Dialog.prototype, "hasHeadline", void 0);
+__decorate$1([
+    r()
+], Dialog.prototype, "hasActions", void 0);
+__decorate$1([
+    r()
+], Dialog.prototype, "hasIcon", void 0);
+function isFocusable(element) {
+    // Check if the element is a known built-in focusable element:
+    // - <a> and <area> with `href` attributes.
+    // - Form controls that are not disabled.
+    // - `contenteditable` elements.
+    // - Anything with a non-negative `tabindex`.
+    const knownFocusableElements = ':is(button,input,select,textarea,object,:is(a,area)[href],[tabindex],[contenteditable=true])';
+    const notDisabled = ':not(:disabled,[disabled])';
+    const notNegativeTabIndex = ':not([tabindex^="-"])';
+    if (element.matches(knownFocusableElements + notDisabled + notNegativeTabIndex)) {
+        return true;
+    }
+    const isCustomElement = element.localName.includes('-');
+    if (!isCustomElement) {
+        return false;
+    }
+    // If a custom element does not have a tabindex, it may still be focusable
+    // if it delegates focus with a shadow root. We also need to check again if
+    // the custom element is a disabled form control.
+    if (!element.matches(notDisabled)) {
+        return false;
+    }
+    return element.shadowRoot?.delegatesFocus ?? false;
+}
+
+/**
+ * @license
+ * Copyright 2024 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+// Generated stylesheet for ./dialog/internal/dialog-styles.css.
+const styles = i$5 `:host{border-start-start-radius:var(--md-dialog-container-shape-start-start, var(--md-dialog-container-shape, var(--md-sys-shape-corner-extra-large, 28px)));border-start-end-radius:var(--md-dialog-container-shape-start-end, var(--md-dialog-container-shape, var(--md-sys-shape-corner-extra-large, 28px)));border-end-end-radius:var(--md-dialog-container-shape-end-end, var(--md-dialog-container-shape, var(--md-sys-shape-corner-extra-large, 28px)));border-end-start-radius:var(--md-dialog-container-shape-end-start, var(--md-dialog-container-shape, var(--md-sys-shape-corner-extra-large, 28px)));display:contents;margin:auto;max-height:min(560px,100% - 48px);max-width:min(560px,100% - 48px);min-height:140px;min-width:280px;position:fixed;height:fit-content;width:fit-content}dialog{background:rgba(0,0,0,0);border:none;border-radius:inherit;flex-direction:column;height:inherit;margin:inherit;max-height:inherit;max-width:inherit;min-height:inherit;min-width:inherit;outline:none;overflow:visible;padding:0;width:inherit}dialog[open]{display:flex}::backdrop{background:none}.scrim{background:var(--md-sys-color-scrim, #000);display:none;inset:0;opacity:32%;pointer-events:none;position:fixed;z-index:1}:host([open]) .scrim{display:flex}h2{all:unset;align-self:stretch}.headline{align-items:center;color:var(--md-dialog-headline-color, var(--md-sys-color-on-surface, #1d1b20));display:flex;flex-direction:column;font-family:var(--md-dialog-headline-font, var(--md-sys-typescale-headline-small-font, var(--md-ref-typeface-brand, Roboto)));font-size:var(--md-dialog-headline-size, var(--md-sys-typescale-headline-small-size, 1.5rem));line-height:var(--md-dialog-headline-line-height, var(--md-sys-typescale-headline-small-line-height, 2rem));font-weight:var(--md-dialog-headline-weight, var(--md-sys-typescale-headline-small-weight, var(--md-ref-typeface-weight-regular, 400)));position:relative}slot[name=headline]::slotted(*){align-items:center;align-self:stretch;box-sizing:border-box;display:flex;gap:8px;padding:24px 24px 0}.icon{display:flex}slot[name=icon]::slotted(*){color:var(--md-dialog-icon-color, var(--md-sys-color-secondary, #625b71));fill:currentColor;font-size:var(--md-dialog-icon-size, 24px);margin-top:24px;height:var(--md-dialog-icon-size, 24px);width:var(--md-dialog-icon-size, 24px)}.has-icon slot[name=headline]::slotted(*){justify-content:center;padding-top:16px}.scrollable slot[name=headline]::slotted(*){padding-bottom:16px}.scrollable.has-headline slot[name=content]::slotted(*){padding-top:8px}.container{border-radius:inherit;display:flex;flex-direction:column;flex-grow:1;overflow:hidden;position:relative;transform-origin:top}.container::before{background:var(--md-dialog-container-color, var(--md-sys-color-surface-container-high, #ece6f0));border-radius:inherit;content:"";inset:0;position:absolute}.scroller{display:flex;flex:1;flex-direction:column;overflow:hidden;z-index:1}.scrollable .scroller{overflow-y:scroll}.content{color:var(--md-dialog-supporting-text-color, var(--md-sys-color-on-surface-variant, #49454f));font-family:var(--md-dialog-supporting-text-font, var(--md-sys-typescale-body-medium-font, var(--md-ref-typeface-plain, Roboto)));font-size:var(--md-dialog-supporting-text-size, var(--md-sys-typescale-body-medium-size, 0.875rem));line-height:var(--md-dialog-supporting-text-line-height, var(--md-sys-typescale-body-medium-line-height, 1.25rem));flex:1;font-weight:var(--md-dialog-supporting-text-weight, var(--md-sys-typescale-body-medium-weight, var(--md-ref-typeface-weight-regular, 400)));height:min-content;position:relative}slot[name=content]::slotted(*){box-sizing:border-box;padding:24px}.anchor{position:absolute}.top.anchor{top:0}.bottom.anchor{bottom:0}.actions{position:relative}slot[name=actions]::slotted(*){box-sizing:border-box;display:flex;gap:8px;justify-content:flex-end;padding:16px 24px 24px}.has-actions slot[name=content]::slotted(*){padding-bottom:8px}md-divider{display:none;position:absolute}.has-headline.show-top-divider .headline md-divider,.has-actions.show-bottom-divider .actions md-divider{display:flex}.headline md-divider{bottom:0}.actions md-divider{top:0}@media(forced-colors: active){dialog{outline:2px solid WindowText}}
+`;
+
+/**
+ * @license
+ * Copyright 2023 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * @license
+ * Copyright 2025 Omicron Energy GmbH
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * @tagname oscd-dialog
+ * @summary Dialogs can require an action, communicate information, or help
+ * users accomplish a task. There are two types of dialogs: basic and
+ * full-screen.
+ *
+ * A dialog is a modal window that appears in front of app content to provide
+ * critical information or ask for a decision. Dialogs disable all app
+ * functionality when they appear, and remain on screen until confirmed,
+ * dismissed, or a required action has been taken.
+ *
+ * Dialogs are purposefully interruptive, so they should be used sparingly.
+ * A less disruptive alternative is to use a menu, which provides options
+ * without interrupting a user’s experience.
+ *
+ * On mobile devices only, complex dialogs should be displayed fullscreen.
+ *
+ * __Example usages:__
+ * - Common use cases for basic dialogs include alerts, quick selection, and
+ * confirmation.
+ * - More complex dialogs may contain actions that require a series of tasks
+ * to complete. One example is creating a calendar entry with the event title,
+ * date, location, and time.
+ *
+ * @final
+ * @suppress {visibility}
+ */
+class OscdDialog extends ScopedElementsMixin(Dialog) {
+}
+OscdDialog.scopedElements = {
+    'md-divider': OscdDivider,
+};
+OscdDialog.styles = [styles];
+
+/** A dialog component for displaying warnings */
+class WarnDialog extends ScopedElementsMixin(i$2) {
+    constructor() {
+        super(...arguments);
+        this.heading = '';
+        this.message = '';
+    }
+    warning(details) {
+        this.heading = details.heading;
+        this.message = details.message;
+        this.onOk = details.onOk;
+        this.dialog.show();
+    }
+    close() {
+        this.dialog.close();
+        this.heading = '';
+        this.message = '';
+        this.onOk = undefined;
+    }
+    handleOk() {
+        if (this.onOk) {
+            this.onOk();
+        }
+        this.close();
+    }
+    render() {
+        return x `
+      <oscd-dialog @closed=${this.close}>
+        <div slot="headline">${this.heading}</div>
+        <div slot="content" class="dialog-content">
+          <p>${this.message}</p>
+        </div>
+        <div slot="actions">
+          <oscd-filled-button slot="primaryAction" @click=${this.handleOk}
+            >OK</oscd-filled-button
+          >
+        </div>
+      </oscd-dialog>
+    `;
+    }
+}
+WarnDialog.scopedElements = {
+    'oscd-dialog': OscdDialog,
+    'oscd-filled-button': OscdFilledButton,
+};
+WarnDialog.styles = i$5 `
+    .dialog-content {
+      margin-top: 16px;
+    }
+  `;
+__decorate$1([
+    r()
+], WarnDialog.prototype, "heading", void 0);
+__decorate$1([
+    r()
+], WarnDialog.prototype, "message", void 0);
+__decorate$1([
+    r()
+], WarnDialog.prototype, "onOk", void 0);
+__decorate$1([
+    e$2('oscd-dialog')
+], WarnDialog.prototype, "dialog", void 0);
 
 const ACE_DEFAULT_OPTIONS = {
     fontSize: '17',
@@ -46589,16 +47481,6 @@ function manageAceOptionChange(editor) {
         originalSetOptions(options);
         persistOptions();
     };
-}
-function parseXml(xml) {
-    const parser = new DOMParser();
-    const parsed = parser.parseFromString(xml, 'application/xml');
-    const parseError = parsed.querySelector('parsererror');
-    if (parseError) {
-        const error = new Error(parseError.textContent ?? 'Invalid XML');
-        console.error('XML Parsing Error:', error);
-    }
-    return parsed;
 }
 class OscdEditorSource extends ScopedElementsMixin(i$2) {
     constructor() {
@@ -46685,19 +47567,24 @@ class OscdEditorSource extends ScopedElementsMixin(i$2) {
         if (!this.xmlText || !this.docName) {
             return;
         }
-        let newDoc;
-        try {
-            newDoc = parseXml(this.xmlText);
-        }
-        catch (error) {
-            console.error('Failed to parse XML:', error);
+        const parser = new DOMParser();
+        const parsed = parser.parseFromString(this.xmlText, 'application/xml');
+        const parseError = parsed.querySelector('parsererror');
+        if (parseError) {
+            const errorMsg = parseError.querySelector('div')?.textContent ||
+                'Unknown XML parsing error';
+            this.warnDialog?.warning({
+                heading: 'Invalid XML',
+                message: errorMsg,
+                onOk: () => { },
+            });
             return;
         }
         if (this.doc?.documentElement) {
             this.dispatchEvent(newEditEventV2([
                 { node: this.doc?.documentElement },
                 {
-                    node: newDoc?.documentElement,
+                    node: parsed?.documentElement,
                     parent: this.doc,
                     reference: null,
                 },
@@ -46765,6 +47652,7 @@ class OscdEditorSource extends ScopedElementsMixin(i$2) {
         .value=${this.xmlText}
         @change=${(e) => this.handleAceChange(e)}
       ></ace-editor>
+      <warn-dialog> </warn-dialog>
     `;
     }
 }
@@ -46783,6 +47671,7 @@ OscdEditorSource.scopedElements = {
     'oscd-outlined-button': OscdOutlinedButton,
     'oscd-outlined-icon-button': OscdOutlinedIconButton,
     'oscd-icon': OscdIcon,
+    'warn-dialog': WarnDialog,
 };
 OscdEditorSource.styles = i$5 `
     :host {
@@ -46836,6 +47725,9 @@ __decorate$1([
 __decorate$1([
     e$2('ace-editor')
 ], OscdEditorSource.prototype, "aceEditor", void 0);
+__decorate$1([
+    e$2('warn-dialog')
+], OscdEditorSource.prototype, "warnDialog", void 0);
 
 export { OscdEditorSource as default };
 //# sourceMappingURL=oscd-editor-source.js.map

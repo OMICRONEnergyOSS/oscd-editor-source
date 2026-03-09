@@ -1,6 +1,6 @@
 import { LitElement, type PropertyValueMap } from 'lit';
 import type * as AceGlobal from 'ace-builds';
-import { EditV2, Transactor } from '@omicronenergy/oscd-api';
+import { EditV2, Transactor } from '@openscd/oscd-api';
 import 'ace-builds/src-noconflict/ace.js';
 import 'ace-builds/src-noconflict/theme-sqlserver.js';
 import 'ace-builds/src-noconflict/mode-xml.js';
@@ -10,6 +10,7 @@ import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdOutlinedIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdOutlinedIconButton.js';
 import { OscdOutlinedButton } from '@omicronenergy/oscd-ui/button/OscdOutlinedButton.js';
+import { WarnDialog } from './warn-dialog.js';
 declare global {
     interface Window {
         ace: typeof AceGlobal;
@@ -23,6 +24,7 @@ export default class OscdEditorSource extends OscdEditorSource_base {
         'oscd-outlined-button': typeof OscdOutlinedButton;
         'oscd-outlined-icon-button': typeof OscdOutlinedIconButton;
         'oscd-icon': typeof OscdIcon;
+        'warn-dialog': typeof WarnDialog;
     };
     editor: Transactor<EditV2>;
     docs: Record<string, XMLDocument>;
@@ -34,7 +36,8 @@ export default class OscdEditorSource extends OscdEditorSource_base {
     private dirty;
     xmlText: string;
     _initialXmlText: string;
-    aceEditor: AceEditor.default;
+    aceEditor: AceEditor;
+    warnDialog: WarnDialog;
     connectedCallback(): void;
     disconnectedCallback(): void;
     private handleAceChange;

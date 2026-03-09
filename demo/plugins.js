@@ -1,13 +1,12 @@
 import OscdMenuOpen from '@omicronenergy/oscd-menu-open';
 import OscdMenuSave from '@omicronenergy/oscd-menu-save';
 import OscdBackgroundEditV1 from '@omicronenergy/oscd-background-editv1';
+import OscdEditorSource from '@omicronenergy/oscd-editor-source/oscd-editor-source.js';
 
 const { registry } = document.querySelector('oscd-shell');
 registry.define('oscd-menu-open', OscdMenuOpen);
 registry.define('oscd-menu-save', OscdMenuSave);
 registry.define('oscd-background-editv1', OscdBackgroundEditV1);
-
-import OscdEditorSource from '../oscd-editor-source.js';
 registry.define('oscd-editor-source', OscdEditorSource);
 
 export const plugins = {

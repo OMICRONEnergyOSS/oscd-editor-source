@@ -3,21 +3,10 @@ import typescript from '@rollup/plugin-typescript';
 import { rollupPluginHTML as html } from '@web/rollup-plugin-html';
 import { importMetaAssets } from '@web/rollup-plugin-import-meta-assets';
 import copy from 'rollup-plugin-copy';
-import fs from 'fs';
-
-const tsconfig = JSON.parse(fs.readFileSync('./tsconfig.json', 'utf8'));
-const demoTsconfig = {
-  ...tsconfig,
-  compilerOptions: { ...tsconfig.compilerOptions, outDir: 'dist/demo' },
-};
-
-const packageJson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
-
-const name = packageJson.name.split('/').pop();
 
 export default [
   {
-    input: `${name}.ts`,
+    input: `src/oscd-editor-source.ts`,
     output: {
       sourcemap: true, // Add source map to build output
       format: 'es', // ES module type export
@@ -30,7 +19,7 @@ export default [
       copy({
         targets: [
           {
-            src: 'node_modules/ace-builds/src-noconflict/worker-xml.js',
+            src: 'node_modules/ace-builds/src-noconflict/*.js',
             dest: 'dist/ace',
             verbose: true,
             flatten: true,
@@ -57,8 +46,6 @@ export default [
       /** Resolve bare module imports */
       nodeResolve(),
 
-      typescript(demoTsconfig),
-
       /** Bundle assets references via import.meta.url */
       importMetaAssets(),
 
@@ -74,7 +61,7 @@ export default [
       copy({
         targets: [
           {
-            src: 'node_modules/ace-builds/src-noconflict/worker-xml.js',
+            src: 'node_modules/ace-builds/src-noconflict/*.js',
             dest: 'dist/demo/ace',
           },
         ],

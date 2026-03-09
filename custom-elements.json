@@ -4,13 +4,22 @@
   "modules": [
     {
       "kind": "javascript-module",
-      "path": "ace-theme-oscd.ts",
+      "path": "src/oscd-editor-source.spec.ts",
       "declarations": [],
-      "exports": []
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "oscd-editor-source",
+          "declaration": {
+            "name": "OscdEditorSource",
+            "module": "/src/oscd-editor-source.js"
+          }
+        }
+      ]
     },
     {
       "kind": "javascript-module",
-      "path": "oscd-editor-source.ts",
+      "path": "src/oscd-editor-source.ts",
       "declarations": [
         {
           "kind": "class",
@@ -24,7 +33,7 @@
                 "text": "object"
               },
               "static": true,
-              "default": "{ /* * add any web-components this component will reference here. * E.g. * \"oscd-button\": OscdButton, * * Important! * Importing the web-component class should NOT result in the web-component being registered with the global customElements registry. * Otherwise it will fail to render at all. You'll only get an empty tag, no web component. */ 'ace-editor': AceEditor, 'oscd-filled-button': OscdFilledButton, 'oscd-outlined-button': OscdOutlinedButton, 'oscd-outlined-icon-button': OscdOutlinedIconButton, 'oscd-icon': OscdIcon, }"
+              "default": "{ /* * add any web-components this component will reference here. * E.g. * \"oscd-button\": OscdButton, * * Important! * Importing the web-component class should NOT result in the web-component being registered with the global customElements registry. * Otherwise it will fail to render at all. You'll only get an empty tag, no web component. */ 'ace-editor': AceEditor, 'oscd-filled-button': OscdFilledButton, 'oscd-outlined-button': OscdOutlinedButton, 'oscd-outlined-icon-button': OscdOutlinedIconButton, 'oscd-icon': OscdIcon, 'warn-dialog': WarnDialog, }"
             },
             {
               "kind": "field",
@@ -111,7 +120,14 @@
               "kind": "field",
               "name": "aceEditor",
               "type": {
-                "text": "AceEditor.default"
+                "text": "AceEditor"
+              }
+            },
+            {
+              "kind": "field",
+              "name": "warnDialog",
+              "type": {
+                "text": "WarnDialog"
               }
             },
             {
@@ -208,6 +224,7 @@
             "name": "LitElement",
             "package": "lit"
           },
+          "tagName": "oscd-editor-source",
           "customElement": true
         }
       ],
@@ -217,7 +234,116 @@
           "name": "default",
           "declaration": {
             "name": "OscdEditorSource",
-            "module": "oscd-editor-source.ts"
+            "module": "src/oscd-editor-source.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/warn-dialog.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "A dialog component for displaying warnings",
+          "name": "WarnDialog",
+          "members": [
+            {
+              "kind": "field",
+              "name": "scopedElements",
+              "type": {
+                "text": "object"
+              },
+              "static": true,
+              "default": "{ 'oscd-dialog': OscdDialog, 'oscd-filled-button': OscdFilledButton, }"
+            },
+            {
+              "kind": "field",
+              "name": "heading",
+              "type": {
+                "text": "string | undefined"
+              },
+              "privacy": "private",
+              "default": "''"
+            },
+            {
+              "kind": "field",
+              "name": "message",
+              "type": {
+                "text": "string | undefined"
+              },
+              "privacy": "private",
+              "default": "''"
+            },
+            {
+              "kind": "field",
+              "name": "onOk",
+              "type": {
+                "text": "() => void | undefined"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "dialog",
+              "type": {
+                "text": "OscdDialog"
+              }
+            },
+            {
+              "kind": "method",
+              "name": "warning",
+              "privacy": "public",
+              "parameters": [
+                {
+                  "name": "details",
+                  "type": {
+                    "text": "WarningDetail"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "close",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "handleOk",
+              "privacy": "private",
+              "return": {
+                "type": {
+                  "text": "void"
+                }
+              }
+            }
+          ],
+          "mixins": [
+            {
+              "name": "ScopedElementsMixin",
+              "package": "@open-wc/scoped-elements/lit-element.js"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "WarnDialog",
+          "declaration": {
+            "name": "WarnDialog",
+            "module": "src/warn-dialog.ts"
           }
         }
       ]

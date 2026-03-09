@@ -2,7 +2,7 @@ import { LitElement, html, css, type PropertyValueMap } from 'lit';
 import type * as AceGlobal from 'ace-builds';
 import { property, query, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
-import { EditV2, Transactor } from '@omicronenergy/oscd-api';
+import { EditV2, Transactor } from '@openscd/oscd-api';
 import AceEditor from 'ace-custom-element';
 import 'ace-custom-element/dist/ace/mode-xml.js';
 import 'ace-custom-element/dist/ace/ext-searchbox.js';
@@ -10,11 +10,12 @@ import 'ace-custom-element/dist/ace/ext-themelist.js';
 import './ace-theme-oscd.js';
 import 'ace-custom-element/dist/ace/ext-settings_menu.js';
 
-import { newEditEventV2 } from '@omicronenergy/oscd-api/utils.js';
+import { newEditEventV2 } from '@openscd/oscd-api/utils.js';
 import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton.js';
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdOutlinedIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdOutlinedIconButton.js';
 import { OscdOutlinedButton } from '@omicronenergy/oscd-ui/button/OscdOutlinedButton.js';
+import { WarnDialog } from './warn-dialog.js';
 
 type AceSettingsMenuModule = {
   init: () => void;
@@ -93,17 +94,6 @@ function manageAceOptionChange(editor: AceGlobal.Ace.Editor) {
   };
 }
 
-function parseXml(xml: string): XMLDocument {
-  const parser = new DOMParser();
-  const parsed = parser.parseFromString(xml, 'application/xml');
-  const parseError = parsed.querySelector('parsererror');
-  if (parseError) {
-    const error = new Error(parseError.textContent ?? 'Invalid XML');
-    console.error('XML Parsing Error:', error);
-  }
-  return parsed;
-}
-
 export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   static scopedElements = {
     /*
@@ -120,6 +110,7 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
     'oscd-outlined-button': OscdOutlinedButton,
     'oscd-outlined-icon-button': OscdOutlinedIconButton,
     'oscd-icon': OscdIcon,
+    'warn-dialog': WarnDialog,
   };
 
   @property({ type: Object })
@@ -151,7 +142,10 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   _initialXmlText: string = '';
 
   @query('ace-editor')
-  aceEditor!: AceEditor.default;
+  aceEditor!: AceEditor;
+
+  @query('warn-dialog')
+  warnDialog!: WarnDialog;
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -263,20 +257,29 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
       return;
     }
 
-    let newDoc: XMLDocument;
-    try {
-      newDoc = parseXml(this.xmlText);
-    } catch (error) {
-      console.error('Failed to parse XML:', error);
+    const parser = new DOMParser();
+    const parsed = parser.parseFromString(this.xmlText, 'application/xml');
+    const parseError = parsed.querySelector('parsererror');
+    if (parseError) {
+      const errorMsg =
+        parseError.querySelector('div')?.textContent ||
+        'Unknown XML parsing error';
+
+      this.warnDialog?.warning({
+        heading: 'Invalid XML',
+        message: errorMsg,
+        onOk: () => {},
+      });
       return;
     }
+
     if (this.doc?.documentElement) {
       this.dispatchEvent(
         newEditEventV2(
           [
             { node: this.doc?.documentElement },
             {
-              node: newDoc?.documentElement,
+              node: parsed?.documentElement,
               parent: this.doc,
               reference: null,
             },
@@ -356,6 +359,7 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
         .value=${this.xmlText}
         @change=${(e: CustomEvent<string>) => this.handleAceChange(e)}
       ></ace-editor>
+      <warn-dialog> </warn-dialog>
     `;
   }
 

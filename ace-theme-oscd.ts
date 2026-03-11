@@ -1,6 +1,7 @@
 /*
  * Custom Ace theme that follows OpenSCD CSS theming variables
  */
+import 'ace-builds/src-noconflict/ace.js';
 
 type AceDefine = (
   id: string,

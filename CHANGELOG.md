@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.4](https://github.com/OMICRONEnergyOSS/oscd-editor-source/compare/oscd-editor-source-v0.0.3...oscd-editor-source-v0.0.4) (2026-03-09)
+
+
+### Features
+
+* updated deps, moved code into src & added parse error dialog ([76d95b2](https://github.com/OMICRONEnergyOSS/oscd-editor-source/commit/76d95b2151a6f69fa1cfa100e44bf1fb7c417280))
+
 ## [0.0.3](https://github.com/OMICRONEnergyOSS/oscd-editor-source/compare/oscd-editor-source-v0.0.2...oscd-editor-source-v0.0.3) (2026-02-03)
 
 

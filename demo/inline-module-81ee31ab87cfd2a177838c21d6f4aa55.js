@@ -46,7 +46,7 @@ Object.getOwnPropertyDescriptor(X,Y);Z&&Object.defineProperty(W,Y,Z);}else W[Y]=
     };
     oscdShell.docName = filename;
 
-    const { plugins } = await import('./plugins-DDVGjs2c.js');
+    const { plugins } = await import('./plugins-TOWZdHsi.js');
     oscdShell.plugins = plugins;
   })();
 //# sourceMappingURL=inline-module-81ee31ab87cfd2a177838c21d6f4aa55.js.map

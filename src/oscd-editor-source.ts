@@ -353,9 +353,6 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
       <ace-editor
         mode=${aceOptions.mode}
         theme=${aceOptions.theme}
-        style="font-size: ${aceOptions.fontSize
-          ? `${aceOptions.fontSize}px`
-          : 'inherit'}"
         .value=${this.xmlText}
         @change=${(e: CustomEvent<string>) => this.handleAceChange(e)}
       ></ace-editor>

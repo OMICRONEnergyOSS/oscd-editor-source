@@ -36,10 +36,7 @@ const ACE_DEFAULT_OPTIONS = {
   theme: 'ace/theme/oscd',
   mode: 'ace/mode/xml',
 };
-const ACE_BASE_PATH = new URL('./ace/', import.meta.url).toString();
 const storageKey = 'oscd:ace-options';
-
-window.ace?.config?.set?.('basePath', ACE_BASE_PATH);
 
 const getStoredAceOptions = (): Omit<
   Partial<AceGlobal.Ace.EditorOptions>,

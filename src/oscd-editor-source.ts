@@ -1,108 +1,21 @@
 import { LitElement, html, css, type PropertyValueMap } from 'lit';
-import type * as AceGlobal from 'ace-builds';
 import { property, query, state } from 'lit/decorators.js';
 import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
-import { EditV2, Transactor } from '@openscd/oscd-api';
-import AceEditor from 'ace-custom-element';
-import 'ace-custom-element/dist/ace/mode-xml.js';
-import 'ace-custom-element/dist/ace/ext-searchbox.js';
-import 'ace-custom-element/dist/ace/ext-themelist.js';
-import './ace-theme-oscd.js';
-import 'ace-custom-element/dist/ace/ext-settings_menu.js';
-
 import { newEditEventV2 } from '@openscd/oscd-api/utils.js';
 import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton.js';
 import { OscdIcon } from '@omicronenergy/oscd-ui/icon/OscdIcon.js';
 import { OscdOutlinedIconButton } from '@omicronenergy/oscd-ui/iconbutton/OscdOutlinedIconButton.js';
 import { OscdOutlinedButton } from '@omicronenergy/oscd-ui/button/OscdOutlinedButton.js';
+import { OscdAceEditor } from '@omicronenergy/oscd-ui/ace-editor/OscdAceEditor.js';
+
 import { WarnDialog } from './warn-dialog.js';
 
-type AceSettingsMenuModule = {
-  init: () => void;
-};
-
-type AceEditorWithSettingsMenu = AceGlobal.Ace.Editor & {
-  showSettingsMenu?: () => void;
-};
-
-declare global {
-  interface Window {
-    ace: typeof AceGlobal;
-  }
-}
-
-const ACE_DEFAULT_OPTIONS = {
-  fontSize: '17',
-  theme: 'ace/theme/oscd',
-  mode: 'ace/mode/xml',
-};
-const storageKey = 'oscd:ace-options';
-
-const getStoredAceOptions = (): Omit<
-  Partial<AceGlobal.Ace.EditorOptions>,
-  'theme' | 'mode'
-> &
-  Pick<AceGlobal.Ace.EditorOptions, 'theme' | 'mode'> => {
-  try {
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      return {
-        ...ACE_DEFAULT_OPTIONS,
-        ...JSON.parse(stored),
-      };
-    }
-  } catch (error) {
-    console.warn('Failed to retrieve Ace options from storage:', error);
-  }
-  return ACE_DEFAULT_OPTIONS;
-};
-
-let aceOptions = getStoredAceOptions();
-let isSettingsMenuInitialized = false;
-
-function manageAceOptionChange(editor: AceGlobal.Ace.Editor) {
-  editor.setOptions(aceOptions);
-
-  const originalSetOption = editor.setOption.bind(editor);
-  const originalSetOptions = editor.setOptions.bind(editor);
-  const persistOptions = () => {
-    try {
-      aceOptions = {
-        ...ACE_DEFAULT_OPTIONS,
-        ...editor.getOptions(),
-      };
-      localStorage.setItem(storageKey, JSON.stringify(aceOptions));
-    } catch (error) {
-      console.warn('Failed to store Ace options:', error);
-    }
-  };
-
-  editor.setOption = (name: string, value: unknown) => {
-    originalSetOption(
-      name as keyof AceGlobal.Ace.EditorOptions,
-      value as never,
-    );
-    persistOptions();
-  };
-
-  editor.setOptions = (options: Partial<AceGlobal.Ace.EditorOptions>) => {
-    originalSetOptions(options);
-    persistOptions();
-  };
-}
+import type { EditV2, Transactor } from '@openscd/oscd-api';
+import type { AceEditorWithSettingsMenu } from '@omicronenergy/oscd-ui/ace-editor/OscdAceEditor.js';
 
 export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   static scopedElements = {
-    /*
-     * add any web-components this component will reference here.
-     * E.g.
-     * "oscd-button": OscdButton,
-     *
-     * Important!
-     * Importing the web-component class should NOT result in the web-component being registered with the global customElements registry.
-     * Otherwise it will fail to render at all. You'll only get an empty tag, no web component.
-     */
-    'ace-editor': AceEditor,
+    'oscd-ace-editor': OscdAceEditor,
     'oscd-filled-button': OscdFilledButton,
     'oscd-outlined-button': OscdOutlinedButton,
     'oscd-outlined-icon-button': OscdOutlinedIconButton,
@@ -131,35 +44,32 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   @property({ type: Number })
   editCount = -1;
 
-  private dirty = false;
-
   @state()
   xmlText: string = '';
 
-  _initialXmlText: string = '';
+  @state()
+  private dirty = false;
 
-  @query('ace-editor')
-  aceEditor!: AceEditor;
+  private initialXmlText = '';
+
+  @query('oscd-ace-editor')
+  oscdAceEditor!: OscdAceEditor;
 
   @query('warn-dialog')
   warnDialog!: WarnDialog;
 
-  connectedCallback(): void {
-    super.connectedCallback();
-    window.ace?.config?.addEventListener?.('editor', manageAceOptionChange);
-
-    if (!isSettingsMenuInitialized) {
-      const settingsMenu = window.ace?.require?.('ace/ext/settings_menu') as
-        | AceSettingsMenuModule
-        | undefined;
-      settingsMenu?.init();
-      isSettingsMenuInitialized = true;
+  protected willUpdate(changedProps: PropertyValueMap<OscdEditorSource>): void {
+    if (
+      changedProps.has('doc') ||
+      changedProps.has('docVersion') ||
+      changedProps.has('editCount')
+    ) {
+      this.xmlText = this.doc
+        ? new XMLSerializer().serializeToString(this.doc)
+        : '';
+      this.initialXmlText = this.xmlText;
+      this.dirty = false;
     }
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    window.ace?.config?.removeEventListener?.('editor', manageAceOptionChange);
   }
 
   private handleAceChange(e: CustomEvent<string>): void {
@@ -167,26 +77,26 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
       return;
     }
     this.xmlText = e.detail;
-    this.dirty = this.xmlText !== this._initialXmlText;
+    this.dirty = this.xmlText !== this.initialXmlText;
   }
 
   collapseAll() {
-    if (!this.aceEditor?.editor) {
+    if (!this.oscdAceEditor?.editor) {
       return;
     }
     // Fold all except the root element (line 0)
-    this.aceEditor.editor.session.foldAll(1);
+    this.oscdAceEditor.editor.session.foldAll(1);
   }
 
   expandAll() {
-    if (!this.aceEditor?.editor) {
+    if (!this.oscdAceEditor?.editor) {
       return;
     }
-    this.aceEditor.editor.session.unfold();
+    this.oscdAceEditor.editor.session.unfold();
   }
 
   formatXml() {
-    const rawXml = this.aceEditor.editor?.getSelectedText() || this.xmlText;
+    const rawXml = this.oscdAceEditor.editor?.getSelectedText() || this.xmlText;
     if (!rawXml) {
       return;
     }
@@ -195,11 +105,11 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
     const xml = rawXml.trim();
 
     let initialIndent = '';
-    if (this.aceEditor.editor?.getSelectedText()) {
-      const range = this.aceEditor.editor.getSelectionRange();
+    if (this.oscdAceEditor.editor?.getSelectedText()) {
+      const range = this.oscdAceEditor.editor.getSelectionRange();
       // Get the starting line of the selection and detect its leading whitespace
       const startLine = range.start.row;
-      const lineContent = this.aceEditor.editor.session.getLine(startLine);
+      const lineContent = this.oscdAceEditor.editor.session.getLine(startLine);
       initialIndent = lineContent.match(/^(\s*)/)?.[1] || '';
     }
 
@@ -226,10 +136,10 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
       }
     });
 
-    if (this.aceEditor.editor?.getSelectedText()) {
-      const range = this.aceEditor.editor.getSelectionRange();
+    if (this.oscdAceEditor.editor?.getSelectedText()) {
+      const range = this.oscdAceEditor.editor.getSelectionRange();
       // Remove the trailing \r\n
-      this.aceEditor.editor.session.replace(
+      this.oscdAceEditor.editor.session.replace(
         range,
         formatted.substring(0, formatted.length - 2),
       );
@@ -240,9 +150,8 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   }
 
   openSettings() {
-    const editor = this.aceEditor?.editor as
-      | AceEditorWithSettingsMenu
-      | undefined;
+    const editor: AceEditorWithSettingsMenu | undefined =
+      this.oscdAceEditor?.editor;
     if (!editor) {
       return;
     }
@@ -288,28 +197,7 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
         ),
       );
       this.dirty = false;
-      this._initialXmlText = this.xmlText;
-    }
-  }
-
-  protected updated(changedProps: PropertyValueMap<OscdEditorSource>): void {
-    if (changedProps.has('editCount') && this.doc) {
-      const serializer = new XMLSerializer();
-      const newText = serializer.serializeToString(this.doc);
-      if (newText !== this.xmlText) {
-        this.xmlText = newText;
-      }
-      this._initialXmlText = this.xmlText;
-      this.dirty = false;
-
-      // Clear selection when content updates
-      setTimeout(() => {
-        if (this.aceEditor?.editor) {
-          /* For reasons unknown the ace editor initially selects all code, so we need to clear that*/
-          this.aceEditor.editor.selection.clearSelection();
-          this.aceEditor.editor.moveCursorTo(0, 0);
-        }
-      }, 10);
+      this.initialXmlText = this.xmlText;
     }
   }
 
@@ -318,17 +206,17 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
       <div class="toolbar">
         <div class="actions">
           <oscd-outlined-icon-button
-            @click=${() => this.aceEditor?.editor?.session.foldAll(1)}
+            @click=${() => this.oscdAceEditor?.editor?.session.foldAll(1)}
           >
             <oscd-icon>collapse_all</oscd-icon>
           </oscd-outlined-icon-button>
           <oscd-outlined-icon-button
-            @click=${() => this.aceEditor?.editor?.session.unfold()}
+            @click=${() => this.oscdAceEditor?.editor?.session.unfold()}
           >
             <oscd-icon>expand_all</oscd-icon>
           </oscd-outlined-icon-button>
           <oscd-outlined-icon-button
-            @click=${() => this.aceEditor.editor?.execCommand('find')}
+            @click=${() => this.oscdAceEditor.editor?.execCommand('find')}
           >
             <oscd-icon>search</oscd-icon>
           </oscd-outlined-icon-button>
@@ -347,12 +235,10 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
           Apply
         </oscd-filled-button>
       </div>
-      <ace-editor
-        mode=${aceOptions.mode}
-        theme=${aceOptions.theme}
+      <oscd-ace-editor
         .value=${this.xmlText}
-        @change=${(e: CustomEvent<string>) => this.handleAceChange(e)}
-      ></ace-editor>
+        @change=${this.handleAceChange}
+      ></oscd-ace-editor>
       <warn-dialog> </warn-dialog>
     `;
   }
@@ -360,7 +246,7 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   static styles = css`
     :host {
       display: grid;
-      grid-template-rows: auto 1fr;
+      grid-template-rows: auto minmax(0, 1fr);
       height: 100%;
       overflow: hidden;
     }
@@ -377,9 +263,8 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
       flex-shrink: 0;
     }
 
-    ace-editor {
-      height: inherit;
-      overflow: auto;
+    oscd-ace-editor {
+      min-height: 0;
     }
   `;
 }

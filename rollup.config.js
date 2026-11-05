@@ -16,17 +16,6 @@ export default [
     preserveEntrySignatures: 'strict', // leaves export of the plugin entry point
 
     plugins: [
-      copy({
-        targets: [
-          {
-            src: 'node_modules/ace-builds/src-noconflict/*.js',
-            dest: 'dist/ace',
-            verbose: true,
-            flatten: true,
-          },
-          // Add more patterns if you have more assets
-        ],
-      }),
       /** Resolve bare module imports */
       nodeResolve(),
 
@@ -56,17 +45,6 @@ export default [
         ],
         verbose: true,
         flatten: false,
-      }),
-
-      copy({
-        targets: [
-          {
-            src: 'node_modules/ace-builds/src-noconflict/*.js',
-            dest: 'dist/demo/ace',
-          },
-        ],
-        verbose: true,
-        flatten: true,
       }),
     ],
     output: {

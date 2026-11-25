@@ -4,8 +4,7 @@ import { ScopedElementsMixin } from '@open-wc/scoped-elements/lit-element.js';
 import { newEditEventV2 } from '@openscd/oscd-api/utils.js';
 import { OscdFilledButton } from '@omicronenergy/oscd-ui/button/OscdFilledButton.js';
 import { OscdAceEditor } from '@omicronenergy/oscd-ui/ace-editor/OscdAceEditor.js';
-
-import { WarnDialog } from './warn-dialog.js';
+import { OscdWarnDialog } from '@omicronenergy/oscd-ui/dialog/warning/OscdWarnDialog.js';
 
 import type { EditV2, Transactor } from '@openscd/oscd-api';
 
@@ -13,7 +12,7 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   static scopedElements = {
     'oscd-ace-editor': OscdAceEditor,
     'oscd-filled-button': OscdFilledButton,
-    'warn-dialog': WarnDialog,
+    'oscd-warn-dialog': OscdWarnDialog,
   };
 
   @property({ type: Object })
@@ -48,8 +47,8 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
   @query('oscd-ace-editor')
   oscdAceEditor!: OscdAceEditor;
 
-  @query('warn-dialog')
-  warnDialog!: WarnDialog;
+  @query('oscd-warn-dialog')
+  warnDialog!: OscdWarnDialog;
 
   protected willUpdate(changedProps: PropertyValueMap<OscdEditorSource>): void {
     if (
@@ -132,7 +131,7 @@ export default class OscdEditorSource extends ScopedElementsMixin(LitElement) {
           Apply
         </oscd-filled-button>
       </oscd-ace-editor>
-      <warn-dialog> </warn-dialog>
+      <oscd-warn-dialog></oscd-warn-dialog>
     `;
   }
 

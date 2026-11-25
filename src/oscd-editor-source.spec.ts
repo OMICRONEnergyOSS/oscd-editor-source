@@ -139,6 +139,46 @@ describe('oscd-editor-source', () => {
     expect(applyButton.disabled).to.equal(true);
   });
 
+  it('shows the shared warning dialog without applying invalid XML', async () => {
+    const editor = await waitForEditor();
+    const original = new XMLSerializer().serializeToString(plugin.doc!);
+    const invalidXml = '<SCL></wrong>';
+    let editCount = 0;
+    plugin.addEventListener('oscd-edit-v2', () => {
+      editCount += 1;
+    });
+    editor.setValue(invalidXml, -1);
+    await waitUntil(() => plugin.xmlText === invalidXml);
+    await plugin.updateComplete;
+    await plugin.warnDialog.updateComplete;
+    await plugin.warnDialog.dialog.updateComplete;
+
+    const applyButton = plugin.shadowRoot!.querySelector('oscd-filled-button')!;
+    applyButton.click();
+    await waitUntil(() => plugin.warnDialog.dialog.open);
+    await plugin.warnDialog.updateComplete;
+
+    expect(
+      plugin.warnDialog.shadowRoot
+        ?.querySelector('[slot="headline"]')
+        ?.textContent?.trim(),
+    ).to.equal('Invalid XML');
+    expect(
+      plugin.warnDialog.shadowRoot
+        ?.querySelector('[slot="content"]')
+        ?.textContent?.trim().length,
+    ).to.be.greaterThan(0);
+    expect(editCount).to.equal(0);
+    expect(new XMLSerializer().serializeToString(plugin.doc!)).to.equal(
+      original,
+    );
+    expect(plugin.xmlText).to.equal(invalidXml);
+    expect(applyButton.disabled).to.equal(false);
+
+    plugin.warnDialog.shadowRoot!.querySelector('oscd-filled-button')!.click();
+    await waitUntil(() => !plugin.warnDialog.dialog.open);
+  });
+
   it('refreshes for opaque docVersion changes and retains editCount compatibility', async () => {
     const editor = await waitForEditor();
     editor.insert('draft');

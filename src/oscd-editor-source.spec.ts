@@ -26,6 +26,18 @@ describe('oscd-editor-source', () => {
     return plugin.oscdAceEditor.editor!;
   }
 
+  function toolbarAction(label: string): HTMLElement {
+    const buttons =
+      plugin.oscdAceEditor.shadowRoot!.querySelectorAll<HTMLElement>(
+        '.toolbar oscd-outlined-icon-button',
+      );
+    const button = Array.from(buttons).find(item => item.ariaLabel === label);
+    if (button === undefined) {
+      throw new Error(`Missing toolbar action: ${label}`);
+    }
+    return button;
+  }
+
   beforeEach(async () => {
     const sclDoc = new DOMParser().parseFromString(
       sclXmlDocString,
@@ -67,13 +79,19 @@ describe('oscd-editor-source', () => {
     const originalRoot = plugin.doc!.documentElement;
     editor.focus();
     editor.find('test substation');
-    await sendKeys({ type: 'Edited substation with a longer description' });
+    const start = editor.getSelectionRange().start;
+    const replacement = 'Edited substation with a longer description';
+    await sendKeys({ type: replacement });
     await waitUntil(() =>
       plugin.xmlText.includes(
         'desc="Edited substation with a longer description"',
       ),
     );
     await plugin.updateComplete;
+    expect(editor.getCursorPosition()).to.deep.equal({
+      row: start.row,
+      column: start.column + replacement.length,
+    });
 
     const applyButton = plugin.shadowRoot!.querySelector('oscd-filled-button')!;
     expect(applyButton.disabled).to.equal(false);
@@ -100,6 +118,23 @@ describe('oscd-editor-source', () => {
           : null,
       ).to.equal('Edited substation with a longer description');
     }
+    await plugin.updateComplete;
+    expect(applyButton.disabled).to.equal(true);
+  });
+
+  it('disables Apply after undo restores the original text', async () => {
+    const editor = await waitForEditor();
+    const original = editor.getValue();
+    editor.focus();
+    editor.find('test substation');
+    await sendKeys({ type: 'Changed' });
+    await waitUntil(() => plugin.xmlText.includes('desc="Changed"'));
+    await plugin.updateComplete;
+    const applyButton = plugin.shadowRoot!.querySelector('oscd-filled-button')!;
+    expect(applyButton.disabled).to.equal(false);
+
+    toolbarAction('Undo').click();
+    await waitUntil(() => plugin.xmlText === original);
     await plugin.updateComplete;
     expect(applyButton.disabled).to.equal(true);
   });
@@ -144,7 +179,7 @@ describe('oscd-editor-source', () => {
   it('formats the buffer and a selection without changing the document', async () => {
     const editor = await waitForEditor();
     const original = new XMLSerializer().serializeToString(plugin.doc!);
-    plugin.formatXml();
+    toolbarAction('Format XML').click();
     await waitForEditor();
     expect(editor.getValue()).to.include('\n\t<Substation');
     expect(new XMLSerializer().serializeToString(plugin.doc!)).to.equal(
@@ -152,7 +187,7 @@ describe('oscd-editor-source', () => {
     );
 
     editor.selectAll();
-    plugin.formatXml();
+    toolbarAction('Format XML').click();
     await waitUntil(() => plugin.xmlText === editor.getValue());
     expect(editor.getValue()).to.include('\n\t<Substation');
   });
@@ -164,15 +199,12 @@ describe('oscd-editor-source', () => {
       -1,
     );
     await waitUntil(() => plugin.xmlText === editor.getValue());
-    plugin.collapseAll();
+    toolbarAction('Collapse all').click();
     expect(editor.session.getAllFolds()).to.have.length(1);
-    plugin.expandAll();
+    toolbarAction('Expand all').click();
     expect(editor.session.getAllFolds()).to.have.length(0);
 
-    const searchButton = plugin.shadowRoot!.querySelectorAll(
-      'oscd-outlined-icon-button',
-    )[2];
-    searchButton.click();
+    toolbarAction('Search').click();
     await waitUntil(
       () =>
         Boolean(plugin.oscdAceEditor.shadowRoot?.querySelector('.ace_search')),
@@ -216,7 +248,7 @@ describe('oscd-editor-source', () => {
       'Ace editor did not initialize',
     );
 
-    plugin.openSettings();
+    toolbarAction('Settings').click();
 
     await waitUntil(
       () => Boolean(document.getElementById('ace_settingsmenu')),

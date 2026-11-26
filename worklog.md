@@ -1,5 +1,201 @@
 # Validator workbench in the source editor
 
+## oscd-tooling migration plan, 2026-11-25
+
+### Findings and decisions
+
+- The user requested migrating the repository to oscd-tooling. npm reports
+  `@omicronenergy/oscd-tooling` 0.0.8; its published README is the command and
+  configuration reference for this migration.
+- The warning-dialog cleanup is committed; only existing worklog edits remain
+  uncommitted at pre-flight. Preserve them.
+- **CEM decision:** the user selected "Remove it — no known consumer".
+  Remove `custom-elements.json`, the `customElements` package field and the
+  `analyze` script together.
+- Keep runtime dependencies and demo plugin registrations unchanged.
+  oscd-menu-commons remains a separate follow-up, not part of this migration.
+- Tests directly import `@open-wc/testing` and
+  `@web/test-runner-commands`; retain these devDependencies. The demo directly
+  imports `@webcomponents/scoped-custom-element-registry`; retain it.
+- The current Rollup config bundles `import.meta.url` worker assets and copies
+  demo assets. Verify equivalent behavior in the shared config before deleting
+  the local config; retain only a thin extension if a real gap requires it.
+- Existing workflows delegate to oscd-gh-workflows. Leave them unchanged unless
+  a verified tooling compatibility issue requires an approved adjustment.
+
+### Approved implementation
+
+- The user approved the migration, dependency installation, generated
+  `.githooks/` and repository-local `core.hooksPath` change on 2026-11-25.
+  Staging, commits, history changes and remote writes remain out of scope.
+
+1. Add `@omicronenergy/oscd-tooling` at `^0.0.8`, prune duplicated tooling
+   dependencies while retaining packages imported directly by tests and the
+   demo, and map existing scripts to the shared CLI. Remove local Prettier,
+   lint-staged and Playwright overrides.
+2. Extend the shared tsconfig, retain a thin ESLint config for editor support,
+   remove redundant Rollup/WTR/WDS/commitlint configs and the two tracked
+   `.husky` hooks, and remove CEM as agreed.
+3. Install dependencies and regenerate the lockfile. Map `prepare` to
+   `oscd install-hooks`; it generates `.githooks/pre-commit` and
+   `.githooks/commit-msg` and changes this repository's local Git
+   `core.hooksPath` to `.githooks`, as explicitly approved. No staging, history
+   changes or remote writes were in scope.
+4. Update README development, testing and tooling instructions; correct the
+   stale settings-persistence and no-tests statements. Do not run automatic
+   formatting or perform unrelated source refactors.
+5. Verify install/prepare, hooks path, lint, build, bundle and all three browser
+   tests. Check worker assets in the bundle and smoke-test the development
+   and bundled demos. Report browser/system dependency or CI constraints
+   rather than installing OS packages without separate approval.
+
+### Implementation findings
+
+- The shared Rollup config retains `importMetaAssets` and copies demo assets,
+  so no local Rollup extension is needed.
+- The shared WTR config runs Chromium only. Retain a thin WTR extension for
+  Chromium, Firefox and WebKit instead of reducing existing coverage; retain
+  `@web/test-runner-playwright` as its explicitly imported helper dependency.
+- Initial `npm install` installed tooling but `prepare` rejected the existing
+  `.husky/_` hooks path. Use the supported `--force` option for the already
+  approved switch to `.githooks`; keep the normal prepare script non-forcing.
+- The user approved removing exactly the stale cached Firefox
+  `firefox-1511/firefox/lock` symlink after a read-only check found its target
+  PID absent. Removing it fixed Firefox launch. No isolated browser downloads
+  or OS package installation were performed.
+- The user approved temporary demo servers on `127.0.0.1:19084` and `:19085`.
+  Development and bundled demo smoke checks passed; both servers were stopped.
+
+## Shared warning dialog cleanup, 2026-11-25
+
+- **Approved scope:** replace the local warning dialog with oscd-ui's
+  `OscdWarnDialog`, delete its local counterpart, and verify invalid-XML Apply
+  behavior. No Git writes or unrelated cleanup.
+- The committed baseline now declares and installs oscd-ui 0.1.4 rather than
+  the earlier local link. Its exported warning dialog has the same API and
+  behavior as the local copy. Earlier release-gate notes below are historical.
+- Plan: update the scoped registration, query type and template; remove
+  `src/warn-dialog.ts`; add an integration regression; run type, build, lint
+  and browser checks. Refresh the generated manifest to remove the deleted
+  component's metadata.
+
+## Toolbar alignment follow-up, 2026-11-24
+
+- The user questioned the default `0 0 8px` toolbar padding and reported that
+  the toolbar looks vertically misaligned against the borderless editor.
+  Three-value CSS padding means top, horizontal and bottom; the 8px bottom
+  value was carried over from the old source plugin's toolbar margin.
+- Chromium measurement in the existing oscd-ui Storybook: toolbar height
+  68px, with 10px above and 18px below the 40px buttons. The extra 8px makes
+  the toolbar's own default spacing asymmetric. Ace's editor container and
+  first rendered line both start at the toolbar's bottom in this story;
+  no additional CSS top padding was measured there.
+- An in-browser test with `--oscd-ace-editor-toolbar-padding: 0` gives 10px
+  above and below the buttons. The 10px internal controls inset is still
+  needed for touch targets and focus rings.
+- **Approved scope:** change the default toolbar padding to
+  `0` without adding a border or changing Ace internals; update documented and
+  generated token defaults and add a regression for symmetrical default
+  spacing. Verify Storybook, browser tests and the source plugin. Regenerate
+  the oscd-ui manifest using its normal script, which also refreshes the local
+  Material base manifest in `node_modules`. Preserve both worktrees' existing
+  changes; no Git writes or publishing.
+
+## Toolbar tokens and overflow investigation, 2026-11-23
+
+- The user reported scrollbars around the toolbar after disabling and
+  re-enabling it in the oscd-ui Storybook, and asked about padding and
+  toolbar/button color customization.
+- No toolbar-specific design tokens were exposed in Step 9. Toolbar gap is
+  hard-coded to 4px and bottom padding to 8px. The outlined buttons inherit
+  Material's `--md-outlined-icon-button-icon-color` and
+  `--md-outlined-icon-button-outline-color`; their normal background is
+  transparent, with no normal background token in the imported styles.
+- Reproduced using the existing `localhost:6006` Storybook control in
+  Chromium. At a wide viewport, `.toolbar-controls` is 304x40px but its
+  scrollable content is 308x44px, both before and after toggling. The 40px
+  icon buttons contain 48px touch targets extending 4px past their edges;
+  `overflow-x: auto` also computes `overflow-y: auto`. The prior narrow-layout
+  test checked placement, not unwanted scrollable overflow or toggle cycles.
+- **Proposed fix, not yet approved:** adjust the shared toolbar layout to
+  accommodate touch targets and focus indicators without spurious scrollbars,
+  while retaining accessible horizontal overflow when space is genuinely
+  insufficient. Add regression tests for wide and narrow layouts, focus and
+  toolbar off/on transitions in both inherited editors.
+- The user asked whether existing Material tokens can be used rather than new
+  button color aliases. They can be inherited by the outlined buttons,
+  including icon, outline and interaction-state colors; their scope can also
+  include other matching descendants. The imported outlined-button stylesheet
+  hard-codes an unselected transparent background, so existing tokens do not
+  provide a normal button-background override. The toolbar itself has no
+  Material component providing padding or background tokens.
+- **Approved scope:** expose toolbar padding and background
+  through oscd-ui component tokens, document applicable existing Material
+  button tokens without shadowing them, and fix the overflow as above. Do not
+  introduce a separate button-background override. Update JSDoc, Storybook and
+  regenerate the manifest normally; verify shared and plugin behavior without
+  modifying Git state.
+
+## oscd-ui 0.1.3 follow-up plan, 2026-11-23
+
+- The user updated the linked sibling oscd-ui to 0.1.3 and requested resolving
+  the Firefox/WebKit timeouts and removing locally duplicated editor behavior
+  in favor of the shared Ace or SCL editor.
+- `node_modules/@omicronenergy/oscd-ui` links to `../oscd-ui`; its checkout
+  is clean at release tag `oscd-ui-v0.1.3`. This repo's lockfile still records
+  0.1.2 for that link. The plugin already uses oscd-ui's `OscdAceEditor`;
+  it does not implement a separate Ace wrapper.
+- `npm test` passed against the linked build: nine tests each in Chromium,
+  Firefox and WebKit. The previously reported typing/Apply timeout did not
+  reproduce. This alone does not establish cursor stability or undo behavior.
+- `OscdAceEditor` 0.1.3 has an optional floating toolbar for formatting,
+  folding, searching and settings, plus undo/redo. This plugin duplicates
+  those controls and the XML formatter. `OscdSclEditor` accepts an Element,
+  not a complete XMLDocument, so replacing the whole-document text editor with
+  its Element API risks losing document-level content. Prefer the text editor
+  unless further evidence changes that conclusion.
+
+**Superseded proposal:** use the existing floating toolbar. The user clarified
+that a recent decision calls for a conventional top toolbar instead.
+
+**Revised proposal, approved by the user on 2026-11-23:**
+
+1. In oscd-ui, replace the Ace editor's floating menu with an always-visible
+   horizontal toolbar above the editor when `toolbar` is enabled. Reuse its
+   existing accessible actions; the SCL editor inherits the same toolbar.
+   Preserve the disabled-toolbar layout and full-height editor sizing.
+2. Provide a named slot at the toolbar's right end for consumer-specific
+   actions, so this plugin can place Apply alongside the shared controls
+   without duplicating them. This adds a public UI API; check narrow layouts
+   and keyboard/accessibility behavior.
+3. Keep the whole-document text-based `OscdAceEditor` in the plugin, remove
+   its duplicate toolbar/formatting logic, and retain Apply and document
+   synchronization. Keep the existing local UI link and preserve unrelated
+   uncommitted changes. Review the unused local Ace theme before removing it.
+4. Update shared-component and plugin integration tests and stories; verify
+   cursor position, typing, Apply, undo-to-original and document refresh in
+   Chromium, Firefox and WebKit. Investigate actual failures rather than
+   raising timeouts. Run appropriate type, lint, build and bundle checks in
+   both repositories, then record results and dependency/lockfile status.
+   No validation implementation, tooling migration, publishing or Git writes.
+
+## Apply/cursor regression investigation, 2026-11-11
+
+- User reports Apply not enabling after attribute edits in
+  `http://localhost:8000/demo/`, with typing jumping to the first line.
+- Installed and latest published oscd-ui are both 0.1.2. Its Ace wrapper
+  schedules cursor resets on every value update, and the base component still
+  has the previously documented stale input synchronization race.
+- Current editor tests: Chromium 9/9 passed; Firefox and WebKit 8/9 passed,
+  with the typing/Apply case timing out. Thus Apply is not universally broken;
+  the installed wrapper's input behavior is a confirmed blocker.
+- The pre-existing uncommitted `docName` refresh condition is preserved.
+- Proposed bounded next step: reconcile the sibling oscd-ui fix against its
+  current state, consume a fixed local build for this demo, and verify typing,
+  cursor stability, Apply and undo-to-original behavior. Local dependency
+  consumption and any sibling changes require confirmation. Do not patch
+  node_modules, publish, write Git state, or start validation/tooling work.
+
 ## Goal and current direction
 
 Start with **schema validation inside oscd-editor-source**: a button, useful
@@ -365,12 +561,10 @@ Do not run formatting-only tools, stage, or commit.
 ## Step Status
 
 - Step 1, assessment and revised handoff: done.
-- Step 2, Ace integration and upstream fixes: done and verified against a local
-  oscd-ui package build; published consumption remains gated below.
-- Ace release gate: blocked until the oscd-ui fixes are published and adopted.
-  Published 0.1.2 is still installed and declared; it has the known input bugs.
+- Step 2, Ace integration and upstream fixes: done; published oscd-ui 0.1.4
+  is installed and the tests pass in all three browsers.
 - Step 3, editor-only feature reconciliation: done in the oscd-ui main worktree
-  and verified; final diff/Git integration and release remain pending approval.
+  and released as oscd-ui 0.1.3; the newer Step 9 changes are adopted in 0.1.4.
 - Step 4, richer shared story fixture: done; publisher demo reused and all
   seven stories verified again in the browser.
 - Step 5, full-height editor stories: done; all seven previews fill the
@@ -381,10 +575,242 @@ Do not run formatting-only tools, stage, or commit.
   distinguish the callback example from SCL schema validation.
 - Step 8, consistent Storybook helpers: done; both editor stories reuse the
   existing metadata/decorator path and hide private/protected/static members.
-- Prerequisite, repository refresh: queued after Ace; oscd-tooling and
-  oscd-menu-commons requested, concrete plan/remaining decisions pending.
+- Step 9, shared top toolbar and plugin integration: done and verified;
+  the plugin now consumes published oscd-ui 0.1.4 rather than a local link.
+- Step 10, toolbar overflow and tokens: done and adopted through oscd-ui 0.1.4.
+- Step 11, toolbar default alignment: done and adopted through oscd-ui 0.1.4;
+  the earlier intermittent WebKit undo timeout did not recur in Step 13.
+- Step 12, shared warning dialog cleanup: done; approved 2026-11-25 and
+  verified against installed oscd-ui 0.1.4.
+- Step 13, oscd-tooling migration: done; install/hooks, lint, build, bundle,
+  three-browser tests and both demo smoke checks verified.
+- Prerequisite, remaining demo refresh: oscd-menu-commons migration queued
+  separately; not included in Step 13.
 - Workbench implementation: not started; depends on the verified migration,
   text-source decision and implementation approval.
+
+## Step 13 Completion Summary
+
+### Issues found during migration (all fixed)
+
+1. **Existing Husky hooks path blocked prepare.** The tooling refuses to
+   overwrite `.husky/_` by default. With the user's explicit approval,
+   `npm run prepare -- --force` replaced it with repository-local `.githooks`.
+   A subsequent normal `npm install` and prepare succeeded without force.
+2. **Shared tests default to Chromium only.** Kept an 11-line local WTR
+   extension selecting Chromium, Firefox and WebKit, rather than silently
+   reducing the existing browser coverage.
+3. **Firefox failed before running tests.** A stale lock symlink in the
+   existing Playwright Firefox cache pointed to a non-running PID and made
+   launch fail with ENOENT. With separate user approval, removed only that
+   symlink after rechecking the PID and target. All tests then passed; no
+   other agent processes or cached browser files were changed.
+
+### Files transformed
+
+- `package.json` and `package-lock.json` — use
+  `@omicronenergy/oscd-tooling` `^0.0.8` and `oscd` scripts; reduce direct
+  devDependencies from 44 to four. Retain `@open-wc/testing`,
+  `@web/test-runner-commands` and `@web/test-runner-playwright` because local
+  tests/config import them. Remove local Prettier/lint-staged settings and
+  the Playwright override. Runtime dependencies remain unchanged.
+- `tsconfig.json` and `eslint.config.js` — thin shared-config extensions,
+  retaining project-relative TypeScript paths locally.
+- `web-test-runner.config.js` — thin shared-config extension retaining all
+  three browsers. Shared tooling owns runner, worker and coverage settings.
+- `README.md` — document shared CLI/configs, hooks, builds, tests, browser
+  prerequisites and ESLint Stylistic replacing Prettier. Correct the stale
+  no-tests and settings-not-persisted claims.
+
+### Files deleted / generated
+
+- Deleted `rollup.config.js`, `web-dev-server.config.js`,
+  `commitlint.config.js` and the tracked `.husky/pre-commit` and
+  `.husky/commit-msg` hooks; shared tooling replaces them.
+- Deleted `custom-elements.json`, its package pointer and the analyze script
+  together, per the user's explicit no-consumer decision.
+- `.githooks/pre-commit` and `.githooks/commit-msg` — generated by the tooling,
+  invoking `oscd lint-staged` and `oscd commitlint` respectively.
+
+### Verification
+
+- `npm run prepare -- --force`, then `npm install`: passed. Verified
+  `git config --get core.hooksPath` returns `.githooks` and both generated
+  hook scripts exist. Hooks were inspected, not executed against the index.
+- `npm ls --depth=0`: passed with no missing or extraneous dependencies.
+- `npm run lint`, `npm run build` and `npm run bundle`: passed; no automatic
+  formatting or source changes. Bundle retains both XML worker assets and
+  copies the demo sample and registration module.
+- `npm test`: initially Chromium/WebKit passed and Firefox failed on the
+  stale cache lock; after its approved removal, all 11 tests passed in each
+  of Chromium, Firefox and WebKit.
+- Temporary WDS servers using the shared CLI's development/bundled serving
+  options on ports 19084/19085 returned HTTP 200. Headless Chromium loaded
+  `sample.scd` into the real editor in each demo, reported no page errors,
+  and received syntax errors from each demo's XML worker for malformed XML.
+  Both temporary servers were stopped after verification.
+- Read the referenced shared workflows: the unit-test image is Playwright
+  `v1.59.1-noble`, matching tooling's pinned 1.59.1, and deployment still calls
+  `npm run bundle`. No workflow changes or CI runs were performed.
+- `git --no-pager diff --check`: passed.
+
+### Remaining limitations
+
+- `npm install` reported 28 audit findings (3 low, 6 moderate, 18 high,
+  1 critical). These were not investigated or auto-fixed as part of this
+  tooling migration. npm also warned about three dependency install scripts
+  without allowScripts approval; verified commands still passed.
+- Rollup retains the existing unresolved external remote demo-shell URL
+  warning. The migration itself made no publish, deployment, staging or
+  commit; it was subsequently committed as `c254e70`.
+- Demo menu replacement and the schema-validation workbench remain out of
+  scope. Earlier local-link/release notes in completion summaries are
+  historical; current dependency consumption is recorded in Step Status.
+
+## Step 12 Completion Summary
+
+### Files transformed
+
+- `src/oscd-editor-source.ts` — import the bare `OscdWarnDialog` class from
+  `@omicronenergy/oscd-ui/dialog/warning/OscdWarnDialog.js`, register it locally
+  as `oscd-warn-dialog`, and update the query type and template. Invalid XML
+  still opens the warning and blocks document edits; parsing behavior is unchanged.
+- `src/warn-dialog.ts` — deleted the duplicate implementation.
+- `src/oscd-editor-source.spec.ts` — add an invalid-XML Apply regression:
+  the shared dialog opens with a heading and message, no edit event is
+  dispatched, the original document and draft are preserved, Apply stays
+  enabled, and OK dismisses the dialog.
+- `custom-elements.json` — regenerated with `npm run analyze`; removes the
+  deleted dialog's metadata and refreshes the previously stale editor members.
+
+### Verification
+
+- `node_modules/.bin/tsc --noEmit --incremental false`: passed.
+- `npm test` (includes `npm run build`): 11 tests passed in each of Chromium,
+  Firefox and WebKit, including the new warning integration test.
+- `npm run lint`: initially reported a line-wrap issue in the new test;
+  passed after correcting that line without running formatting tools.
+- `npm run analyze`: passed.
+- `npm run bundle`: passed; retains the existing unresolved remote demo-shell
+  URL warning.
+- `git --no-pager diff --check`: passed. Existing worklog edits were preserved;
+  no dependency changes, installation, staging or commits were performed.
+
+## Step 11 Completion Summary
+
+### Files transformed
+
+- `../oscd-ui/ace-editor/OscdAceEditor.ts` and `custom-elements.json` — change
+  the toolbar padding default from `0 0 8px` to `0px`; retain the internal 10px
+  control inset and keep Ace layout and border behavior unchanged. `0px` is
+  displayed correctly by the Storybook helper, which converts bare `0` to a
+  numeric default and shows an empty text control.
+- `../oscd-ui/ace-editor/OscdAceEditor.spec.ts` — assert equal space above and
+  below toolbar buttons before and after toggling, alongside overflow checks.
+
+### Verification
+
+- In oscd-ui, `npm run build`, targeted ESLint and `git --no-pager diff --check`
+  passed. The focused WTR run using the session-only three-browser config passed
+  15 tests each in Chromium, Firefox and WebKit; host requirements validation
+  was skipped as in Step 3. `npm run custom-elements-manifest` succeeded with
+  the existing dependency-resolution warnings.
+- Existing Storybook showed `0px` in the token control and measured 10px above
+  and below the buttons. The changed default is equivalent to the approved zero
+  padding; no visual border or Ace-internal change was introduced.
+- Plugin `npm test` initially passed Chromium and Firefox but timed out in the
+  WebKit undo-to-original test; an isolated rerun passed all 10 tests per
+  browser. The cause of the intermittent timeout was not established.
+
+## Step 10 Completion Summary
+
+### Bug fixes
+
+- `../oscd-ui/ace-editor/OscdAceEditor.ts` — the toolbar's scroll area reserves
+  10px for touch targets and animated focus rings and spaces buttons 8px apart.
+  At full width it no longer scrolls because of protruding touch areas; at
+  narrow widths horizontal scrolling remains available. This also applies to
+  the inherited SCL editor.
+- The new toolbar tokens are `--oscd-ace-editor-toolbar-padding` (default
+  `0 0 8px`) and `--oscd-ace-editor-toolbar-background-color` (transparent).
+  Existing Material outlined icon button tokens remain inherited, without new
+  aliases. An unselected outlined button's background remains transparent.
+
+### Files transformed
+
+- `../oscd-ui/ace-editor/OscdAceEditor.ts`, `../oscd-ui/README.md` and
+  `../oscd-ui/custom-elements.json` — document the new toolbar tokens and
+  existing Material icon/outline tokens; regenerate the manifest normally.
+- `../oscd-ui/ace-editor/OscdAceEditor.spec.ts` and
+  `../oscd-ui/scl-editor/OscdSclEditor.spec.ts` — cover overflow before and
+  after toggle, token application, narrow layouts, focus and SCL inheritance.
+
+### Verification
+
+- Baseline focused Chromium tests failed on the reproduced overflow and missing
+  tokens. After the fix, `npm run build` in oscd-ui and the focused WTR run
+  with a session-only three-browser config passed: 15 tests each in Chromium,
+  Firefox and WebKit. Host requirements validation was skipped as in Step 3;
+  all browsers launched.
+- In the existing Storybook at `localhost:6006`, toggling off/on and changing
+  the padding, background and Material icon-color controls worked; at wide
+  width both scroll dimensions matched their client dimensions.
+- In oscd-ui `npm run lint`, `npm run check:component-tokens` and
+  `git --no-pager diff --check` passed. `npm run custom-elements-manifest`
+  succeeded with the existing dependency-resolution warnings; comparison
+  against HEAD found semantic changes only in the two editor modules.
+- In this plugin, `npm test` passed 10 tests per browser and `npm run bundle`
+  passed with the existing external-shell warning. Tests still report multiple
+  Lit versions from the local link. The release gate from Step 9 is unchanged.
+
+## Step 9 Completion Summary
+
+### Files transformed
+
+- `../oscd-ui/ace-editor/OscdAceEditor.ts` — optional visible horizontal top
+  toolbar replaces the floating menu; retains seven shared actions and adds the
+  `toolbar-actions` slot. Horizontal overflow keeps actions reachable at narrow
+  widths, and slotted change events are not mistaken for editor input.
+- `../oscd-ui/ace-editor/OscdAceEditor.spec.ts` and
+  `../oscd-ui/scl-editor/OscdSclEditor.spec.ts` — cover the top toolbar,
+  inherited behavior, slot, narrow layout, formatting and action events.
+- `../oscd-ui/ace-editor/OscdAceEditor.stories.ts`,
+  `../oscd-ui/README.md` and `../oscd-ui/custom-elements.json` — demonstrate,
+  document and expose the toolbar slot. The manifest was regenerated with the
+  user's approval; only the two editor modules changed semantically, although
+  module reordering produces a large textual diff.
+- `src/oscd-editor-source.ts` and its spec — keep the oscd-ui text editor and
+  plugin-specific Apply/document synchronization, slot Apply into the shared
+  toolbar, remove duplicated editor controls/formatter, and test cursor
+  stability and undo-to-original. The existing `docName` refresh is preserved.
+- `src/ace-theme-oscd.ts` — removed: no code imports it and oscd-ui owns the
+  active Ace theme.
+
+### Verification
+
+- In this repo `npm test`: 10 tests passed in each of Chromium, Firefox and
+  WebKit. `node_modules/.bin/tsc --noEmit --incremental false`,
+  `npm run lint`, `npm run bundle` and `git --no-pager diff --check` passed.
+  Bundle emitted both XML worker assets; Rollup reported the existing external
+  demo shell URL. Browser tests logged multiple Lit versions for the local link.
+- In oscd-ui `npm run build`, `node_modules/.bin/tsc --noEmit`, `npm run lint`
+  and `git --no-pager diff --check` passed. A focused WTR run using a
+  session-only three-browser config passed 13 tests per browser; host
+  requirements validation was skipped as in Step 3, and all browsers launched.
+- Storybook built successfully into the session workspace. The standard
+  `npm run custom-elements-manifest` succeeded with existing dependency
+  resolution warnings; semantic comparison against HEAD found changes only in
+  `ace-editor/OscdAceEditor.ts` and `scl-editor/OscdSclEditor.ts` records.
+
+### Remaining integration and release gate
+
+- The top toolbar and slot are uncommitted oscd-ui changes atop release 0.1.3,
+  not part of that published release. The plugin's `file:../oscd-ui` link and
+  stale 0.1.2 lock metadata remain unchanged; release and adoption require a
+  later approved step. Do not claim a clean install from 0.1.3 supports the slot.
+- Formatting now uses the shared editor's basic regex formatter, which uses LF
+  line endings and is not mixed-content-preserving. Validation and the
+  repository refresh remain outside this checkpoint.
 
 ## Step 8 Completion Summary
 

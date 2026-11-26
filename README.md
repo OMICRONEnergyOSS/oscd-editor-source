@@ -25,7 +25,7 @@ Code folding is supported out of the box. There are convienence toolbar actions 
 
 ### Commands
 
-The underlying editor used it here is the Ace Code editor. Which is very capable. When focus is on the editor, it F1 to see all of the available commands. It is also possible to change some settings with Ctrl+, such as changing the theme (although this is not currently persisted).
+The editor uses Ace through oscd-ui's `OscdAceEditor`. With focus in the editor, press F1 to see the available commands or Ctrl+, to change settings such as the theme. Editor settings are persisted in local storage.
 
 ## `<oscd-editor-source>`
 
@@ -33,49 +33,72 @@ The underlying editor used it here is the Ace Code editor. Which is very capable
 
 This is an [OpenSCD](https://openscd.org) plugin. Start up a demo server with `npm run start` and see for yourself!
 
-## Linting and formatting
+## Development
 
-To scan the project for linting and formatting errors, run
+Install dependencies with `npm install`. The prepare script generates `.githooks/`
+and configures this repository to use them for staged-file linting and commit
+message checks. When replacing an existing hooks path, review the old hooks
+before running `npm run prepare -- --force`.
+
+Build the plugin with `npm run build`, or create a deployable plugin and demo
+bundle with `npm run bundle`.
+
+### Linting
+
+To check lint rules, including code style, run:
 
 ```bash
 npm run lint
 ```
 
-To automatically fix linting and formatting errors, run
+To apply automatic ESLint fixes, run:
 
 ```bash
 npm run format
 ```
 
-## Testing with Web Test Runner
+The shared configuration uses ESLint Stylistic rather than Prettier.
 
-> This demo plugin does nothing much that could be tested as it relies exclusively on built-in browser components to do its job. We therefore currently have no tests. If you find something that could be tested, please feel free!
+### Testing with Web Test Runner
 
-To execute a single test run:
+Integration tests cover document loading and refresh, editing, Apply, invalid XML,
+undo, toolbar actions and editor settings in Chromium, Firefox and WebKit.
+
+To build and execute a single test run:
 
 ```bash
 npm run test
 ```
 
-To run the tests in interactive watch mode run:
+To run the tests in interactive watch mode:
 
 ```bash
 npm run test:watch
 ```
 
-## Tooling configs
+The Playwright browsers matching oscd-tooling's pinned version must be installed.
+The tooling's `oscd install-playwright` command installs browsers and system
+dependencies; on Linux it may require elevated permissions.
 
-For most of the tools, the configuration is in the `package.json` to reduce the amount of files in your project.
+### Tooling configuration
 
-If you customize the configuration a lot, you can consider moving them to individual files.
+Build, bundling, lint, test, development-server and hook commands delegate to
+[`@omicronenergy/oscd-tooling`](https://github.com/OMICRONEnergyOSS/oscd-tooling)
+through the `oscd` CLI. Shared configs live in that package, not in this repo.
+The local TypeScript and ESLint configs extend those defaults. The small Web Test
+Runner extension preserves three-browser coverage; the shared default runs
+Chromium only.
 
-## Local Demo with `web-dev-server`
+Custom-elements manifest generation is not enabled for this plugin.
+
+### Local demo
 
 ```bash
 npm run start
 ```
 
-To run a local development server that serves the basic demo located in `demo/index.html`
+This starts the development server for `demo/index.html`. Use
+`npm run start:bundle` to serve the bundled demo instead.
 
 &copy; 2025 OMICRON electronics GmbH
 

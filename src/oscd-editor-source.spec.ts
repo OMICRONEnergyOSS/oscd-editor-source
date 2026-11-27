@@ -263,6 +263,97 @@ describe('oscd-editor-source', () => {
     );
   });
 
+  describe('validation', () => {
+    const validText =
+      '<SCL xmlns="http://www.iec.ch/61850/2003/SCL" version="2007" revision="B" release="4"><Header id="x"/></SCL>';
+    const invalidText =
+      '<SCL xmlns="http://www.iec.ch/61850/2003/SCL" version="2007" revision="B" release="4"><Header/></SCL>';
+
+    const actions = () =>
+      plugin.shadowRoot!.querySelector('oscd-validation-actions')!;
+    const report = () =>
+      plugin.shadowRoot!.querySelector('oscd-validation-report');
+    const summary = () =>
+      actions().shadowRoot!.querySelector('.status')!.textContent!.trim();
+
+    async function validate(text: string) {
+      const editor = await waitForEditor();
+      editor.setValue(text, -1);
+      await waitUntil(() => plugin.xmlText === text);
+      actions()
+        .shadowRoot!.querySelector<HTMLElement>('oscd-outlined-button')!
+        .click();
+    }
+
+    it('shows a tick and no report when the text is valid, until it changes', async () => {
+      await validate(validText);
+      await waitUntil(() => summary() === '✓ Valid', 'no success summary', {
+        timeout: 6000,
+      });
+      expect(report()).to.equal(null);
+
+      (await waitForEditor()).setValue(validText + '\n', -1);
+      await waitUntil(() => summary() === '');
+    });
+
+    it('validates unapplied text and keeps the report as the text changes', async () => {
+      await validate(invalidText);
+      await waitUntil(() => report() !== null, 'no report opened', {
+        timeout: 6000,
+      });
+      expect(summary()).to.match(/^Errors: [1-9]/);
+      expect(plugin.doc!.documentElement.querySelector('Header')).to.equal(
+        null,
+      );
+      expect(report()!.shadowRoot!.querySelectorAll('li').length).to.be.above(
+        0,
+      );
+
+      (await waitForEditor()).setValue(validText, -1);
+      await waitUntil(() => plugin.xmlText === validText);
+      await plugin.updateComplete;
+      expect(report()).to.not.equal(null);
+      expect(report()!.shadowRoot!.querySelector('.stale')).to.not.equal(null);
+
+      actions()
+        .shadowRoot!.querySelector<HTMLElement>('oscd-outlined-button')!
+        .click();
+      await waitUntil(() => report() === null, 'report did not close', {
+        timeout: 6000,
+      });
+      expect(summary()).to.equal('✓ Valid');
+    });
+
+    it('moves the cursor to the line of a clicked finding', async () => {
+      const multiline = invalidText.replace('><Header/>', '>\n<Header/>\n');
+      await validate(multiline);
+      await waitUntil(() => report() !== null, 'no report opened', {
+        timeout: 6000,
+      });
+
+      const finding = report()!.shadowRoot!.querySelector<HTMLElement>(
+        '.finding',
+      )!;
+      const line = Number(finding.textContent!.match(/line (\d+)/)![1]);
+      finding.click();
+
+      const editor = await waitForEditor();
+      expect(editor.getCursorPosition().row).to.equal(line - 1);
+    });
+
+    it('reports an unsupported schema version as a failed run', async () => {
+      await validate(validText.replace('release="4"', 'release="9"'));
+      await waitUntil(() => report() !== null, 'no report opened', {
+        timeout: 6000,
+      });
+
+      expect(summary()).to.equal('Validation failed');
+      expect(report()!.shadowRoot!.querySelector('[role="alert"]')).to.not.equal(
+        null,
+      );
+    });
+  });
+
   it('persists settings through the wrapper across editor instances', async () => {
     const editor = await waitForEditor();
     const originalFontSize = editor.getOption('fontSize');

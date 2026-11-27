@@ -1,5 +1,5 @@
-import OscdMenuOpen from '@omicronenergy/oscd-menu-open';
-import OscdMenuSave from '@omicronenergy/oscd-menu-save';
+import OscdMenuOpen from '@omicronenergy/oscd-menu-commons/oscd-menu-open.js';
+import OscdMenuSave from '@omicronenergy/oscd-menu-commons/oscd-menu-save.js';
 import OscdBackgroundEditV1 from '@omicronenergy/oscd-background-editv1';
 import OscdEditorSource from '@omicronenergy/oscd-editor-source/oscd-editor-source.js';
 

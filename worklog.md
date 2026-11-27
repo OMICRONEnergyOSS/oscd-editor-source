@@ -1,5 +1,15 @@
 # Validator workbench in the source editor
 
+## Demo menu-commons migration plan, 2026-11-27
+
+- The user approved replacing the demo's separate Open and Save packages with
+  `@omicronenergy/oscd-menu-commons@^0.0.3`, using the package's published
+  `oscd-menu-open.js` and `oscd-menu-save.js` subpaths.
+- Preserve the existing custom-element tags and menu metadata: names,
+  translations, icons and `requireDoc`.
+- Update dependencies and lockfile, then verify install, lint, tests, build,
+  bundle and the demo in a browser. No validator changes, staging or commit.
+
 ## oscd-tooling migration plan, 2026-11-25
 
 ### Findings and decisions
@@ -584,10 +594,40 @@ Do not run formatting-only tools, stage, or commit.
   verified against installed oscd-ui 0.1.4.
 - Step 13, oscd-tooling migration: done; install/hooks, lint, build, bundle,
   three-browser tests and both demo smoke checks verified.
-- Prerequisite, remaining demo refresh: oscd-menu-commons migration queued
-  separately; not included in Step 13.
+- Step 14, demo menu-commons migration: done; approved and verified
+  2026-11-27.
 - Workbench implementation: not started; depends on the verified migration,
   text-source decision and implementation approval.
+
+## Step 14 Completion Summary
+
+### Files transformed
+
+- `package.json` and `package-lock.json` — replace direct demo dependencies
+  `@omicronenergy/oscd-menu-open` and `@omicronenergy/oscd-menu-save` with
+  `@omicronenergy/oscd-menu-commons@^0.0.3`.
+- `demo/plugins.js` — import the existing Open and Save plugins from the
+  commons package's published subpaths. Preserve their tag names, labels,
+  German translations, icons and `requireDoc` behavior.
+
+### Verification
+
+- `npm install`: passed and ran the existing prepare hook successfully.
+- `npm run lint`: passed.
+- `npm test`: passed all 11 tests in each of Chromium, Firefox and WebKit.
+- `npm run build` and `npm run bundle`: passed; bundle retains the existing
+  unresolved remote demo-shell URL warning.
+- The running `http://localhost:8000/demo/` returned HTTP 200. Headless
+  Chromium confirmed the sample loaded, both menu tags were registered through
+  the commons imports, the source editor initialized, and there were no page
+  errors.
+
+### Remaining limitations
+
+- The old open/save packages remain as transitive dependencies of
+  `oscd-shell`; this repo no longer declares or imports them directly.
+  Installation warned that a transitive `oscd-menu-save@0.0.1` is deprecated.
+- No commit or staging was performed.
 
 ## Step 13 Completion Summary
 
